@@ -1,0 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@100;200;300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Sarabun", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Sarabun", sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased tracking-tighter;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    background-attachment: fixed;
+  }
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 rounded-full;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-400;
+}
+
+/* Subtle animated background elements */
+.bg-blob {
+  position: fixed;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  filter: blur(120px);
+  z-index: -1;
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+.bg-blob-1 {
+  background: #22c55e; /* Green */
+  top: -100px;
+  left: -100px;
+}
+
+.bg-blob-2 {
+  background: #3b82f6; /* Blue */
+  bottom: -100px;
+  right: -100px;
+}
+
+.bg-blob-3 {
+  background: #800020; /* Maroon (แดงมังคุด) */
+  top: 40%;
+  right: 10%;
+}
+
+.bg-blob-4 {
+  background: #a855f7; /* Purple */
+  bottom: 20%;
+  left: 10%;
+}
+
+.bg-blob-5 {
+  background: #f97316; /* Orange */
+  top: 10%;
+  right: 30%;
+}

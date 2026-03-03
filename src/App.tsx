@@ -34,6 +34,7 @@ import {
 } from "./constants";
 import { JOB_POSITION_CODES } from "./jobCodes";
 import { GraduateData } from "./types";
+import NetlifyConnect from "./components/NetlifyConnect";
 
 // --- Components ---
 
@@ -907,6 +908,9 @@ export default function App() {
                 ...
               </div>
               */}
+
+              {/* Netlify Integration */}
+              <NetlifyConnect />
       </main>
 
       {/* Success Modal */}

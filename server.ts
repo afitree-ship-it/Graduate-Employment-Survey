@@ -4,6 +4,8 @@ import { createServer as createViteServer } from "vite";
 import Database from "better-sqlite3";
 import path from "path";
 import { fileURLToPath } from "url";
+import cookieSession from "cookie-session";
+import axios from "axios";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -85,6 +87,109 @@ async function startServer() {
   const PORT = 3000;
 
   app.use(express.json());
+
+  // Session configuration for iframe context
+  app.use(cookieSession({
+    name: 'session',
+    keys: ['netlify-secret-key'],
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    secure: true,
+    sameSite: 'none',
+    httpOnly: true,
+  }));
+
+  // Netlify OAuth Routes
+  app.get("/api/auth/netlify/url", (req, res) => {
+    const clientId = process.env.NETLIFY_CLIENT_ID;
+    if (!clientId) {
+      return res.status(500).json({ error: "NETLIFY_CLIENT_ID not configured" });
+    }
+
+    // Use the App URL from the environment
+    const appUrl = process.env.APP_URL || `http://localhost:${PORT}`;
+    const redirectUri = `${appUrl}/api/auth/netlify/callback`;
+    
+    const url = `https://app.netlify.com/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}`;
+    res.json({ url });
+  });
+
+  app.get("/api/auth/netlify/callback", async (req, res) => {
+    const { code } = req.query;
+    if (!code) {
+      return res.status(400).send("Missing code");
+    }
+
+    try {
+      const appUrl = process.env.APP_URL || `http://localhost:${PORT}`;
+      const redirectUri = `${appUrl}/api/auth/netlify/callback`;
+
+      const response = await axios.post("https://api.netlify.com/oauth/token", {
+        grant_type: "authorization_code",
+        client_id: process.env.NETLIFY_CLIENT_ID,
+        client_secret: process.env.NETLIFY_CLIENT_SECRET,
+        code,
+        redirect_uri: redirectUri,
+      });
+
+      if (req.session) {
+        req.session.netlify_token = response.data.access_token;
+      }
+
+      res.send(`
+        <html>
+          <body>
+            <script>
+              if (window.opener) {
+                window.opener.postMessage({ type: 'OAUTH_AUTH_SUCCESS', provider: 'netlify' }, '*');
+                window.close();
+              } else {
+                window.location.href = '/';
+              }
+            </script>
+            <p>เชื่อมต่อ Netlify สำเร็จ! กำลังปิดหน้าต่างนี้...</p>
+          </body>
+        </html>
+      `);
+    } catch (error: any) {
+      console.error("Netlify OAuth error:", error.response?.data || error.message);
+      res.status(500).send("Authentication failed");
+    }
+  });
+
+  app.get("/api/netlify/user", async (req, res) => {
+    const token = req.session?.netlify_token;
+    if (!token) return res.status(401).json({ error: "Not connected" });
+
+    try {
+      const response = await axios.get("https://api.netlify.com/api/v1/user", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      res.json(response.data);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/netlify/sites", async (req, res) => {
+    const token = req.session?.netlify_token;
+    if (!token) return res.status(401).json({ error: "Not connected" });
+
+    try {
+      const response = await axios.get("https://api.netlify.com/api/v1/sites", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      res.json(response.data);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/netlify/logout", (req, res) => {
+    if (req.session) {
+      req.session.netlify_token = null;
+    }
+    res.json({ success: true });
+  });
 
   // API Routes
   app.post("/api/save", async (req, res) => {

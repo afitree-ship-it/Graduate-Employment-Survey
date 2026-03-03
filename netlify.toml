@@ -1,0 +1,8 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/api/*"
+  to = "https://ais-dev-gzqzvonmbxgpc2niwosquu-274013666931.asia-southeast1.run.app/api/:splat"
+  status = 200

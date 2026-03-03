@@ -12,7 +12,8 @@ import {
   X,
   Check,
   MessageSquare,
-  ArrowRight
+  ArrowRight,
+  ChevronDown as ChevronDownIcon
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
@@ -34,7 +35,6 @@ import {
 } from "./constants";
 import { JOB_POSITION_CODES } from "./jobCodes";
 import { GraduateData } from "./types";
-import NetlifyConnect from "./components/NetlifyConnect";
 
 // --- Components ---
 
@@ -66,7 +66,7 @@ const SearchableSelect = ({
   const selectedOption = options.find(opt => opt.id === value);
 
   return (
-    <div className="relative mb-10 group">
+    <div className={`relative mb-10 group ${isOpen ? 'z-[100]' : 'z-0'}`}>
       <label className="block text-base font-bold text-slate-700 tracking-tighter mb-4 px-1">
         {label} {required && <span className="text-rose-500">*</span>}
       </label>
@@ -85,13 +85,13 @@ const SearchableSelect = ({
       <AnimatePresence>
         {isOpen && (
           <>
-            <div className="fixed inset-0 z-40 bg-slate-900/5 backdrop-blur-[1px]" onClick={() => setIsOpen(false)} />
+            <div className="fixed inset-0 z-[110] bg-slate-900/5 backdrop-blur-[1px]" onClick={() => setIsOpen(false)} />
             <motion.div 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
               transition={{ duration: 0.2 }}
-              className="absolute z-50 w-full mt-2 bg-white border border-slate-200 rounded-[2rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] max-h-[400px] overflow-hidden flex flex-col ring-1 ring-black/5"
+              className="absolute z-[120] w-full mt-2 bg-white border border-slate-200 rounded-[2rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] max-h-[400px] overflow-hidden flex flex-col ring-1 ring-black/5"
             >
               <div className="p-5 border-b border-slate-100 bg-slate-50/50">
                 <div className="relative">
@@ -119,7 +119,9 @@ const SearchableSelect = ({
                         setSearchTerm("");
                       }}
                     >
-                      <span className={`font-mono text-[10px] font-black px-2 py-1 rounded-lg min-w-[3.5rem] text-center tracking-normal ${value === opt.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>{opt.id}</span>
+                      {opt.id !== opt.label && (
+                        <span className={`font-mono text-[10px] font-black px-2 py-1 rounded-lg min-w-[3.5rem] text-center tracking-normal ${value === opt.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>{opt.id}</span>
+                      )}
                       <span className="flex-1 tracking-tighter">{opt.label}</span>
                       {value === opt.id && (
                         <Check size={16} className="text-emerald-400" />
@@ -150,7 +152,7 @@ const FormSection = ({ title, icon: Icon, children, id }: { title: string; icon:
         <div className="h-1 w-12 md:h-1.5 md:w-16 bg-slate-900 mt-2 md:mt-4 rounded-full opacity-10 group-hover:w-24 group-hover:opacity-30 transition-all duration-700"></div>
       </div>
     </div>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 md:gap-y-6 relative z-10">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 md:gap-y-6 relative">
       {children}
     </div>
   </section>
@@ -321,31 +323,55 @@ export default function App() {
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-3 px-6 py-2.5 bg-white rounded-full shadow-2xl shadow-slate-200 border border-slate-100 mb-10"
+            className="inline-flex items-center gap-3 px-6 py-3 bg-white rounded-3xl shadow-2xl shadow-slate-200 border border-slate-100 mb-10"
           >
             <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse"></div>
-            <span className="text-sm font-black text-slate-900 uppercase tracking-[0.2em]">ระบบสำรวจภาวะการมีงานทำ</span>
+            <div className="flex flex-col items-start text-left">
+              <span className="text-sm font-black text-slate-900 uppercase tracking-tighter">ระบบสำรวจภาวะการมีงานทำ</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] -mt-1">มหาวิทยาลัยฟาฏอนี</span>
+            </div>
           </motion.div>
           
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-4xl md:text-8xl font-black text-slate-900 mb-6 md:mb-8 tracking-tighter leading-[1.1] md:leading-[0.9] font-display"
+            className="text-4xl md:text-8xl font-black text-slate-900 mb-6 md:mb-8 tracking-tighter leading-[1.3] md:leading-[1.1] font-display"
           >
             แบบสำรวจ <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#22c55e] via-[#3b82f6] to-[#800020]">การมีงานทำ</span>
           </motion.h1>
           
-          <motion.p 
+          <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-xl md:text-2xl text-slate-500 max-w-2xl mx-auto font-medium leading-relaxed tracking-tighter"
+            className="text-xl md:text-2xl text-slate-500 max-w-4xl mx-auto font-medium leading-relaxed tracking-tighter"
           >
-            ร่วมเป็นส่วนหนึ่งในการพัฒนาคุณภาพการศึกษาและสร้างเครือข่ายศิษย์เก่าที่เข้มแข็ง <br />
-            <span className="text-slate-900 font-black">ข้อมูลของคุณมีค่าต่อเราเสมอ</span>
-          </motion.p>
+            <span className="block md:inline whitespace-nowrap">ร่วมเป็นส่วนหนึ่งในการพัฒนาคุณภาพการศึกษาและสร้างเครือข่ายศิษย์เก่าที่เข้มแข็ง</span>
+            <div className="flex flex-col items-center justify-center text-slate-900 font-black mt-2">
+              <span>ข้อมูลของคุณมีค่าต่อเราเสมอ</span>
+              <div className="flex flex-col items-center -space-y-4 mt-6">
+                {[0, 1, 2].map((i) => (
+                  <motion.div
+                    key={i}
+                    animate={{ 
+                      opacity: [0.1, 1, 0.1],
+                      y: [0, 8, 0]
+                    }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: 2,
+                      delay: i * 0.3,
+                      ease: "easeInOut"
+                    }}
+                  >
+                    <ChevronDownIcon size={32} strokeWidth={3} className="text-slate-900/40" />
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
         </div>
       </header>
 
@@ -908,9 +934,6 @@ export default function App() {
                 ...
               </div>
               */}
-
-              {/* Netlify Integration */}
-              <NetlifyConnect />
       </main>
 
       {/* Success Modal */}

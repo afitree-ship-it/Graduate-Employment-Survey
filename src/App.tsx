@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, memo } from "react";
 import { 
   Save, 
   Search, 
@@ -38,6 +38,37 @@ import { GraduateData } from "./types";
 
 // --- Components ---
 
+const OptionItem = memo(({ 
+  opt, 
+  value, 
+  onChange, 
+  setIsOpen, 
+  setSearchTerm 
+}: { 
+  opt: { id: string; label: string }; 
+  value: string; 
+  onChange: (val: string) => void;
+  setIsOpen: (val: boolean) => void;
+  setSearchTerm: (val: string) => void;
+}) => (
+  <div 
+    className={`px-6 py-4 text-base cursor-pointer flex items-center gap-4 transition-colors duration-150 ${value === opt.id ? 'bg-slate-900 text-white font-black' : 'text-slate-700 hover:bg-slate-50'}`}
+    onClick={() => {
+      onChange(opt.id);
+      setIsOpen(false);
+      setSearchTerm("");
+    }}
+  >
+    {opt.id !== opt.label && (
+      <span className={`font-mono text-[10px] font-black px-2 py-1 rounded-lg min-w-[3.5rem] text-center tracking-normal ${value === opt.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>{opt.id}</span>
+    )}
+    <span className="flex-1 tracking-tighter">{opt.label}</span>
+    {value === opt.id && (
+      <Check size={16} className="text-emerald-400" />
+    )}
+  </div>
+));
+
 const SearchableSelect = ({ 
   label, 
   options, 
@@ -57,13 +88,15 @@ const SearchableSelect = ({
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredOptions = useMemo(() => {
+    if (!searchTerm) return options;
+    const lowerSearch = searchTerm.toLowerCase();
     return options.filter(opt => 
-      opt.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      opt.label.toLowerCase().includes(searchTerm.toLowerCase())
+      opt.id.toLowerCase().includes(lowerSearch) || 
+      opt.label.toLowerCase().includes(lowerSearch)
     );
   }, [options, searchTerm]);
 
-  const selectedOption = options.find(opt => opt.id === value);
+  const selectedOption = useMemo(() => options.find(opt => opt.id === value), [options, value]);
 
   return (
     <div className={`relative mb-10 group ${isOpen ? 'z-[100]' : 'z-0'}`}>
@@ -71,13 +104,13 @@ const SearchableSelect = ({
         {label} {required && <span className="text-rose-500">*</span>}
       </label>
       <div 
-        className={`w-full p-5 bg-white border rounded-3xl shadow-sm cursor-pointer flex justify-between items-center transition-all duration-300 ${isOpen ? 'border-slate-900 ring-4 ring-slate-100 shadow-lg' : 'border-slate-200 hover:border-slate-400 hover:shadow-md'}`}
+        className={`w-full p-5 bg-white border rounded-3xl shadow-sm cursor-pointer flex justify-between items-center transition-all duration-200 ${isOpen ? 'border-slate-900 ring-4 ring-slate-100 shadow-lg' : 'border-slate-200 hover:border-slate-400 hover:shadow-md'}`}
         onClick={() => setIsOpen(!isOpen)}
       >
         <span className={`tracking-tighter ${selectedOption ? "text-slate-900 font-bold text-lg" : "text-slate-400 font-medium"}`}>
           {selectedOption ? selectedOption.label : placeholder}
         </span>
-        <div className={`p-2 rounded-xl transition-all duration-300 ${isOpen ? 'bg-slate-900 text-white rotate-180' : 'bg-slate-50 text-slate-400'}`}>
+        <div className={`p-2 rounded-xl transition-all duration-200 ${isOpen ? 'bg-slate-900 text-white rotate-180' : 'bg-slate-50 text-slate-400'}`}>
           <ChevronDown size={20} />
         </div>
       </div>
@@ -85,12 +118,12 @@ const SearchableSelect = ({
       <AnimatePresence>
         {isOpen && (
           <>
-            <div className="fixed inset-0 z-[110] bg-slate-900/5 backdrop-blur-[1px]" onClick={() => setIsOpen(false)} />
+            <div className="fixed inset-0 z-[110] bg-slate-900/5" onClick={() => setIsOpen(false)} />
             <motion.div 
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ duration: 0.2 }}
+              exit={{ opacity: 0, y: 5 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
               className="absolute z-[120] w-full mt-2 bg-white border border-slate-200 rounded-[2rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] max-h-[400px] overflow-hidden flex flex-col ring-1 ring-black/5"
             >
               <div className="p-5 border-b border-slate-100 bg-slate-50/50">
@@ -107,26 +140,17 @@ const SearchableSelect = ({
                   />
                 </div>
               </div>
-              <div className="overflow-y-auto flex-1 py-2 custom-scrollbar">
+              <div className="overflow-y-auto flex-1 py-2 custom-scrollbar overscroll-contain">
                 {filteredOptions.length > 0 ? (
                   filteredOptions.map(opt => (
-                    <div 
-                      key={opt.id}
-                      className={`px-6 py-4 text-base cursor-pointer flex items-center gap-4 transition-all duration-200 ${value === opt.id ? 'bg-slate-900 text-white font-black' : 'text-slate-700 hover:bg-slate-50'}`}
-                      onClick={() => {
-                        onChange(opt.id);
-                        setIsOpen(false);
-                        setSearchTerm("");
-                      }}
-                    >
-                      {opt.id !== opt.label && (
-                        <span className={`font-mono text-[10px] font-black px-2 py-1 rounded-lg min-w-[3.5rem] text-center tracking-normal ${value === opt.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>{opt.id}</span>
-                      )}
-                      <span className="flex-1 tracking-tighter">{opt.label}</span>
-                      {value === opt.id && (
-                        <Check size={16} className="text-emerald-400" />
-                      )}
-                    </div>
+                    <OptionItem 
+                      key={opt.id} 
+                      opt={opt} 
+                      value={value} 
+                      onChange={onChange} 
+                      setIsOpen={setIsOpen} 
+                      setSearchTerm={setSearchTerm} 
+                    />
                   ))
                 ) : (
                   <div className="p-10 text-center text-slate-400 text-base font-medium tracking-tighter italic">ไม่พบข้อมูล</div>

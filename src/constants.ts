@@ -1,184 +1,194 @@
 export const FACULTIES = [
   {
     name: "คณะอิสลามศึกษาและนิติศาสตร์",
+    name_en: "Faculty of Islamic Studies and Law",
     departments: [
-      "สาขาวิชาอุศูลุดดีน (หลักสูตรนานาชาติ)",
-      "สาขาวิชาอิสลามศึกษา",
-      "สาขาวิชานิติศาสตร์",
-      "สาขาวิชาชะรีอะฮฺ",
-      "สาขาวิชาอัลกุรอานและอัสสุนนะฮฺ (หลักสูตรนานาชาติ)"
+      { th: "สาขาวิชาอุศูลุดดีน (หลักสูตรนานาชาติ)", en: "Department of Usuluddin (International Program)" },
+      { th: "สาขาวิชาอิสลามศึกษา", en: "Department of Islamic Studies" },
+      { th: "สาขาวิชานิติศาสตร์", en: "Department of Law" },
+      { th: "สาขาวิชาชะรีอะฮฺ", en: "Department of Sharia" },
+      { th: "สาขาวิชาอัลกุรอานและอัสสุนนะฮฺ (หลักสูตรนานาชาติ)", en: "Department of Al-Quran and Al-Sunnah (International Program)" }
     ]
   },
   {
     name: "คณะศิลปศาสตร์และสังคมศาสตร์",
+    name_en: "Faculty of Liberal Arts and Social Sciences",
     departments: [
-      "สาขาวิชาภาษาอาหรับ (หลักสูตรนานาชาติ)",
-      "สาขาวิชารัฐประศาสนศาสตร์",
-      "สาขาวิชาเศรษฐศาสตร์การเงินและการธนาคาร",
-      "สาขาวิชาภาษาอังกฤษ (หลักสูตรนานาชาติ)",
-      "สาขาวิชาภาษามลายู (หลักสูตรนานาชาติ)",
-      "สาขาวิชาบริหารธุรกิจ"
+      { th: "สาขาวิชาภาษาอาหรับ (หลักสูตรนานาชาติ)", en: "Department of Arabic Language (International Program)" },
+      { th: "สาขาวิชารัฐประศาสนศาสตร์", en: "Department of Public Administration" },
+      { th: "สาขาวิชาเศรษฐศาสตร์การเงินและการธนาคาร", en: "Department of Financial and Banking Economics" },
+      { th: "สาขาวิชาภาษาอังกฤษ (หลักสูตรนานาชาติ)", en: "Department of English Language (International Program)" },
+      { th: "สาขาวิชาภาษามลายู (หลักสูตรนานาชาติ)", en: "Department of Malay Language (International Program)" },
+      { th: "สาขาวิชาบริหารธุรกิจ", en: "Department of Business Administration" }
     ]
   },
   {
     name: "คณะวิทยาศาสตร์และเทคโนโลยี",
+    name_en: "Faculty of Science and Technology",
     departments: [
-      "สาขาวิชาเทคโนโลยีสารสนเทศ (หลักสูตรนานาชาติ)",
-      "สาขาวิชาวิจัยและพัฒนาผลิตภัณฑ์อาหารฮาลาล",
-      "สาขาวิชาวิทยาการข้อมูลและการวิเคราะห์ (หลักสูตรนานาชาติ)"
+      { th: "สาขาวิชาเทคโนโลยีสารสนเทศ (หลักสูตรนานาชาติ)", en: "Department of Information Technology (International Program)" },
+      { th: "สาขาวิชาวิจัยและพัฒนาผลิตภัณฑ์อาหารฮาลาล", en: "Department of Halal Food Product Research and Development" },
+      { th: "สาขาวิชาวิทยาการข้อมูลและการวิเคราะห์ (หลักสูตรนานาชาติ)", en: "Department of Data Science and Analytics (International Program)" }
     ]
   },
   {
     name: "คณะศึกษาศาสตร์",
+    name_en: "Faculty of Education",
     departments: [
-      "สาขาวิชาการศึกษาปฐมวัย",
-      "สาขาวิชาอิสลามศึกษา",
-      "สาขาวิชาภาษาอาหรับ",
-      "สาขาวิชาวิทยาศาสตร์ทั่วไป",
-      "สาขาวิชาภาษาอังกฤษ",
-      "สาขาวิชาภาษามลายูและเทคโนโลยีการศึกษา"
+      { th: "สาขาวิชาการศึกษาปฐมวัย", en: "Department of Early Childhood Education" },
+      { th: "สาขาวิชาอิสลามศึกษา", en: "Department of Islamic Studies" },
+      { th: "สาขาวิชาภาษาอาหรับ", en: "Department of Arabic Language" },
+      { th: "สาขาวิชาวิทยาศาสตร์ทั่วไป", en: "Department of General Science" },
+      { th: "สาขาวิชาภาษาอังกฤษ", en: "Department of English Language" },
+      { th: "สาขาวิชาภาษามลายูและเทคโนโลยีการศึกษา", en: "Department of Malay Language and Educational Technology" }
     ]
   }
 ];
 
 export const EMPLOYMENT_STATUS = [
-  { id: "1", label: "ไม่มีงานทำก่อนการศึกษา มีงานทำหลังจบการศึกษา" },
-  { id: "2", label: "ไม่มีงานทำก่อนการศึกษา มีงานทำหลังจบการศึกษาและกำลังศึกษาต่อ" },
-  { id: "3", label: "ยังไม่มีงานทำ" },
-  { id: "4", label: "ยังไม่มีงานทำ และกำลังศึกษาต่อ" },
-  { id: "5", label: "มีงานทำก่อนจบการศึกษา อยู่ในสายงานเดิมหลังจบการศึกษา" },
-  { id: "6", label: "มีงานทำก่อนจบการศึกษา เปลี่ยนสายงานหลังจบการศึกษา" },
-  { id: "7", label: "มีงานทำก่อนจบการศึกษา อยู่ในสายงานเดิมหลังจบการศึกษา เลื่อนระดับ" }
+  { id: "1", label: "ไม่มีงานทำก่อนการศึกษา มีงานทำหลังจบการศึกษา", label_en: "Unemployed before study, employed after graduation" },
+  { id: "2", label: "ไม่มีงานทำก่อนการศึกษา มีงานทำหลังจบการศึกษาและกำลังศึกษาต่อ", label_en: "Unemployed before study, employed after graduation and continuing education" },
+  { id: "3", label: "ยังไม่มีงานทำ", label_en: "Currently unemployed" },
+  { id: "4", label: "ยังไม่มีงานทำ และกำลังศึกษาต่อ", label_en: "Currently unemployed and continuing education" },
+  { id: "5", label: "มีงานทำก่อนจบการศึกษา อยู่ในสายงานเดิมหลังจบการศึกษา", label_en: "Employed before graduation, remaining in the same field after graduation" },
+  { id: "6", label: "มีงานทำก่อนจบการศึกษา เปลี่ยนสายงานหลังจบการศึกษา", label_en: "Employed before graduation, changed field after graduation" },
+  { id: "7", label: "มีงานทำก่อนจบการศึกษา อยู่ในสายงานเดิมหลังจบการศึกษา เลื่อนระดับ", label_en: "Employed before graduation, remaining in the same field with promotion" }
 ];
 
 export const MILITARY_STATUS = [
-  { id: "0", label: "อยู่ในช่วงผ่อนผันเกณฑ์ทหาร หรือได้รับการยกเว้น หรือผ่านการเกณฑ์ทหารแล้ว" },
-  { id: "1", label: "อยู่ในระหว่างการเป็นทหารเกณฑ์" }
+  { id: "0", label: "อยู่ในช่วงผ่อนผันเกณฑ์ทหาร หรือได้รับการยกเว้น หรือผ่านการเกณฑ์ทหารแล้ว", label_en: "Deferred, exempted, or completed military service" },
+  { id: "1", label: "อยู่ในระหว่างการเป็นทหารเกณฑ์", label_en: "Currently in military service" }
 ];
 
 export const JOB_TYPES = [
-  { id: "01", label: "ข้าราชการ /เจ้าหน้าที่หน่วยงานของรัฐ" },
-  { id: "02", label: "รัฐวิสาหกิจ" },
-  { id: "03", label: "พนักงานบริษัท/องค์กรธุรกิจเอกชน" },
-  { id: "04", label: "ดำเนินธุรกิจอิสระ/เจ้าของกิจการ" },
-  { id: "05", label: "พนักงานองค์การต่างประเทศ/ระหว่างประเทศ" },
-  { id: "00", label: "อื่นๆ (ระบุเพิ่มเติม)" }
+  { id: "01", label: "ข้าราชการ /เจ้าหน้าที่หน่วยงานของรัฐ", label_en: "Civil Servant / Government Officer" },
+  { id: "02", label: "รัฐวิสาหกิจ", label_en: "State Enterprise Employee" },
+  { id: "03", label: "พนักงานบริษัท/องค์กรธุรกิจเอกชน", label_en: "Private Sector Employee" },
+  { id: "04", label: "ดำเนินธุรกิจอิสระ/เจ้าของกิจการ", label_en: "Self-employed / Business Owner" },
+  { id: "05", label: "พนักงานองค์การต่างประเทศ/ระหว่างประเทศ", label_en: "International Organization Employee" },
+  { id: "00", label: "อื่นๆ (ระบุเพิ่มเติม)", label_en: "Others (Please specify)" }
 ];
 
 export const SPECIAL_SKILLS = [
-  { id: "01", label: "ด้านภาษาต่างประเทศ" },
-  { id: "02", label: "ด้านการใช้คอมพิวเตอร์" },
-  { id: "03", label: "ด้านกิจกรรมสันทนาการ" },
-  { id: "04", label: "ด้านศิลปะ" },
-  { id: "05", label: "ด้านกีฬา" },
-  { id: "06", label: "ด้านนาฎศิลป/ดนตรีขับร้อง" },
-  { id: "00", label: "อื่นๆ (ระบุเพิ่มเติม)" }
+  { id: "01", label: "ด้านภาษาต่างประเทศ", label_en: "Foreign Languages" },
+  { id: "02", label: "ด้านการใช้คอมพิวเตอร์", label_en: "Computer Skills" },
+  { id: "03", label: "ด้านกิจกรรมสันทนาการ", label_en: "Recreational Activities" },
+  { id: "04", label: "ด้านศิลปะ", label_en: "Arts" },
+  { id: "05", label: "ด้านกีฬา", label_en: "Sports" },
+  { id: "06", label: "ด้านนาฎศิลป/ดนตรีขับร้อง", label_en: "Performing Arts / Music" },
+  { id: "00", label: "อื่นๆ (ระบุเพิ่มเติม)", label_en: "Others (Please specify)" }
 ];
 
 export const BUSINESS_TYPES = [
-  { id: "A", label: "เกษตรกรรม การป่าไม้และการประมง" },
-  { id: "B", label: "การทำเหมืองแร่และเหมืองหิน" },
-  { id: "C", label: "การผลิต" },
-  { id: "D", label: "ไฟฟ้า ก๊าซ ไอน้ำและระบบการปรับอากาศ" },
-  { id: "E", label: "การจัดหาน้ำ การจัดการน้ำเสียและของเสีย รวมถึงกิจกรรมที่เกี่ยวข้อง" },
-  { id: "F", label: "การก่อสร้าง" },
-  { id: "G", label: "การขายส่งและการขายปลีกการซ่อมยานยนต์และจักรยานยนต์" },
-  { id: "H", label: "การขนส่งและสถานที่เก็บสินค้า" },
-  { id: "I", label: "ที่พักแรมและบริการด้านอาหาร" },
-  { id: "J", label: "ข้อมูลข่าวสารและการสื่อสาร" },
-  { id: "K", label: "กิจกรรมทางการเงินและการประกันภัย" },
-  { id: "L", label: "กิจกรรมเกี่ยวกับอสังหาริมทรัพย์" },
-  { id: "M", label: "กิจกรรมวิชาชีพ วิทยาศาสตร์ และกิจกรรมทางวิชาการ" },
-  { id: "N", label: "กิจกรรมการบริหารและบริการสนับสนุนอื่น ๆ" },
-  { id: "O", label: "การบริหารราชการ การป้องกันประเทศ และการประกันสังคมภาคบังคับ" },
-  { id: "P", label: "การศึกษา" },
-  { id: "Q", label: "กิจกรรมด้านสุขภาพและงานสังคมสงเคราะห์" },
-  { id: "R", label: "ศิลปะ ความบันเทิงและนันทนาการ" },
-  { id: "S", label: "กิจกรรมการบริการด้านอื่น ๆ" },
-  { id: "T", label: "กิจกรรมการจ้างงานในครัวเรือน กิจกรรมการผลิตสินค้าและบริการที่ทำขึ้นเองเพื่อใช้ในครัวเรือน" },
-  { id: "U", label: "กิจกรรมขององค์การระหว่างประเทศและภาคีสมาชิก" }
+  { id: "A", label: "เกษตรกรรม การป่าไม้และการประมง", label_en: "Agriculture, Forestry, and Fishing" },
+  { id: "B", label: "การทำเหมืองแร่และเหมืองหิน", label_en: "Mining and Quarrying" },
+  { id: "C", label: "การผลิต", label_en: "Manufacturing" },
+  { id: "D", label: "ไฟฟ้า ก๊าซ ไอน้ำและระบบการปรับอากาศ", label_en: "Electricity, Gas, Steam, and Air Conditioning Supply" },
+  { id: "E", label: "การจัดหาน้ำ การจัดการน้ำเสียและของเสีย รวมถึงกิจกรรมที่เกี่ยวข้อง", label_en: "Water Supply; Sewerage, Waste Management and Remediation Activities" },
+  { id: "F", label: "การก่อสร้าง", label_en: "Construction" },
+  { id: "G", label: "การขายส่งและการขายปลีกการซ่อมยานยนต์และจักรยานยนต์", label_en: "Wholesale and Retail Trade; Repair of Motor Vehicles and Motorcycles" },
+  { id: "H", label: "การขนส่งและสถานที่เก็บสินค้า", label_en: "Transportation and Storage" },
+  { id: "I", label: "ที่พักแรมและบริการด้านอาหาร", label_en: "Accommodation and Food Service Activities" },
+  { id: "J", label: "ข้อมูลข่าวสารและการสื่อสาร", label_en: "Information and Communication" },
+  { id: "K", label: "กิจกรรมทางการเงินและการประกันภัย", label_en: "Financial and Insurance Activities" },
+  { id: "L", label: "กิจกรรมเกี่ยวกับอสังหาริมทรัพย์", label_en: "Real Estate Activities" },
+  { id: "M", label: "กิจกรรมวิชาชีพ วิทยาศาสตร์ และกิจกรรมทางวิชาการ", label_en: "Professional, Scientific, and Technical Activities" },
+  { id: "N", label: "กิจกรรมการบริหารและบริการสนับสนุนอื่น ๆ", label_en: "Administrative and Support Service Activities" },
+  { id: "O", label: "การบริหารราชการ การป้องกันประเทศ และการประกันสังคมภาคบังคับ", label_en: "Public Administration and Defence; Compulsory Social Security" },
+  { id: "P", label: "การศึกษา", label_en: "Education" },
+  { id: "Q", label: "กิจกรรมด้านสุขภาพและงานสังคมสงเคราะห์", label_en: "Human Health and Social Work Activities" },
+  { id: "R", label: "ศิลปะ ความบันเทิงและนันทนาการ", label_en: "Arts, Entertainment, and Recreation" },
+  { id: "S", label: "กิจกรรมการบริการด้านอื่น ๆ", label_en: "Other Service Activities" },
+  { id: "T", label: "กิจกรรมการจ้างงานในครัวเรือน กิจกรรมการผลิตสินค้าและบริการที่ทำขึ้นเองเพื่อใช้ในครัวเรือน", label_en: "Activities of Households as Employers; Undifferentiated Goods- and Services-producing Activities of Households for Own Use" },
+  { id: "U", label: "กิจกรรมขององค์การระหว่างประเทศและภาคีสมาชิก", label_en: "Activities of Extra-territorial Organizations and Bodies" }
 ];
 
 export const SATISFACTION = [
-  { id: "01", label: "พอใจ" },
-  { id: "02", label: "ระบบงานไม่ดี" },
-  { id: "03", label: "ผู้ร่วมงานไม่ดี" },
-  { id: "04", label: "ไม่ได้ใช้ความรู้ที่เรียนมา" },
-  { id: "05", label: "ค่าตอบแทนต่ำ" },
-  { id: "06", label: "ขาดความมั่นคง" },
-  { id: "07", label: "ขาดความก้าวหน้า" },
-  { id: "00", label: "อื่นๆ (ระบุเพิ่มเติม)" }
+  { id: "01", label: "พอใจ", label_en: "Satisfied" },
+  { id: "02", label: "ระบบงานไม่ดี", label_en: "Poor work system" },
+  { id: "03", label: "ผู้ร่วมงานไม่ดี", label_en: "Difficult colleagues" },
+  { id: "04", label: "ไม่ได้ใช้ความรู้ที่เรียนมา", label_en: "Knowledge not applied" },
+  { id: "05", label: "ค่าตอบแทนต่ำ", label_en: "Low compensation" },
+  { id: "06", label: "ขาดความมั่นคง", label_en: "Lack of stability" },
+  { id: "07", label: "ขาดความก้าวหน้า", label_en: "Lack of career growth" },
+  { id: "00", label: "อื่นๆ (ระบุเพิ่มเติม)", label_en: "Others (Please specify)" }
 ];
 
 export const SEARCH_DURATION = [
-  { id: "01", label: "ผู้ที่หางานได้ก่อนจบการศึกษา หรือได้งานทันทีหลังสำเร็จการศึกษา" },
-  { id: "02", label: "1 – 2 เดือน" },
-  { id: "03", label: "3 – 6 เดือน" },
-  { id: "04", label: "7 - 9 เดือน" },
-  { id: "05", label: "10 - 12 เดือน" },
-  { id: "06", label: "มากกว่า 1 ปี" },
-  { id: "07", label: "เป็นงานเดิมก่อนมาศึกษาหรือได้งานทำระหว่างศึกษา" }
+  { id: "01", label: "ผู้ที่หางานได้ก่อนจบการศึกษา หรือได้งานทันทีหลังสำเร็จการศึกษา", label_en: "Employed before or immediately after graduation" },
+  { id: "02", label: "1 – 2 เดือน", label_en: "1 – 2 months" },
+  { id: "03", label: "3 – 6 เดือน", label_en: "3 – 6 months" },
+  { id: "04", label: "7 - 9 เดือน", label_en: "7 - 9 months" },
+  { id: "05", label: "10 - 12 เดือน", label_en: "10 - 12 months" },
+  { id: "06", label: "มากกว่า 1 ปี", label_en: "More than 1 year" },
+  { id: "07", label: "เป็นงานเดิมก่อนมาศึกษาหรือได้งานทำระหว่างศึกษา", label_en: "Previous job or employed during study" }
 ];
 
 export const UNEMPLOYED_REASONS = [
-  { id: "1", label: "ยังไม่ประสงค์ทำงาน" },
-  { id: "2", label: "รอฟังคำตอบจากหน่วยงาน" },
-  { id: "3", label: "หางานทำไม่ได้" },
-  { id: "4", label: "ต้องการประกอบอาชีพอิสระ" },
-  { id: "0", label: "อื่นๆ (ระบุเพิ่มเติม)" }
+  { id: "1", label: "ยังไม่ประสงค์ทำงาน", label_en: "Not yet willing to work" },
+  { id: "2", label: "รอฟังคำตอบจากหน่วยงาน", label_en: "Waiting for response from organization" },
+  { id: "3", label: "หางานทำไม่ได้", label_en: "Unable to find a job" },
+  { id: "4", label: "ต้องการประกอบอาชีพอิสระ", label_en: "Want to be self-employed" },
+  { id: "0", label: "อื่นๆ (ระบุเพิ่มเติม)", label_en: "Others (Please specify)" }
 ];
 
 export const JOB_SEARCH_PROBLEMS = [
-  { id: "01", label: "ไม่มีปัญหา" },
-  { id: "02", label: "ไม่ทราบแหล่งงาน" },
-  { id: "03", label: "หางานที่ถูกใจไม่ได้" },
-  { id: "04", label: "ต้องสอบจึงไม่อยากสมัคร" },
-  { id: "05", label: "ขาดคนสนับสนุน" },
-  { id: "06", label: "ขาดคนหรือเงินค้ำประกัน" },
-  { id: "07", label: "หน่วยงานไม่ต้องการ" },
-  { id: "08", label: "เงินเดือนน้อย" },
-  { id: "09", label: "สอบเข้าทำงานไม่ได้" },
-  { id: "10", label: "ปัญหาด้านสุขภาพ" },
-  { id: "11", label: "ขาดทักษะภาษาต่างประเทศ" },
-  { id: "12", label: "ขาดทักษะด้านคอมพิวเตอร์" },
-  { id: "13", label: "ขาดประสบการณ์ในการทำงาน" },
-  { id: "14", label: "เกรดเฉลี่ยไม่ถึงเกณฑ์ที่กำหนด" },
-  { id: "00", label: "อื่นๆ (ระบุเพิ่มเติม)" }
+  { id: "01", label: "ไม่มีปัญหา", label_en: "No problems" },
+  { id: "02", label: "ไม่ทราบแหล่งงาน", label_en: "Unaware of job sources" },
+  { id: "03", label: "หางานที่ถูกใจไม่ได้", label_en: "Cannot find a desirable job" },
+  { id: "04", label: "ต้องสอบจึงไม่อยากสมัคร", label_en: "Reluctant to apply due to required exams" },
+  { id: "05", label: "ขาดคนสนับสนุน", label_en: "Lack of support" },
+  { id: "06", label: "ขาดคนหรือเงินค้ำประกัน", label_en: "Lack of guarantor or collateral" },
+  { id: "07", label: "หน่วยงานไม่ต้องการ", label_en: "Not required by organizations" },
+  { id: "08", label: "เงินเดือนน้อย", label_en: "Low salary" },
+  { id: "09", label: "สอบเข้าทำงานไม่ได้", label_en: "Failed entrance exams" },
+  { id: "10", label: "ปัญหาด้านสุขภาพ", label_en: "Health problems" },
+  { id: "11", label: "ขาดทักษะภาษาต่างประเทศ", label_en: "Lack of foreign language skills" },
+  { id: "12", label: "ขาดทักษะด้านคอมพิวเตอร์", label_en: "Lack of computer skills" },
+  { id: "13", label: "ขาดประสบการณ์ในการทำงาน", label_en: "Lack of work experience" },
+  { id: "14", label: "เกรดเฉลี่ยไม่ถึงเกณฑ์ที่กำหนด", label_en: "GPA below requirement" },
+  { id: "00", label: "อื่นๆ (ระบุเพิ่มเติม)", label_en: "Others (Please specify)" }
 ];
 
 export const DATA_DISCLOSURE = [
-  { id: "0", label: "ไม่ยินยอมเปิดเผยข้อมูล" },
-  { id: "1", label: "ยินยอมเปิดเผยข้อมูลต่อนายจ้างทุกประเภท" },
-  { id: "2", label: "ยินยอมเปิดเผยข้อมูลยกเว้นนายจ้างประเภทจ้างเหมาแรงงาน" },
-  { id: "3", label: "ยินยอมเปิดเผยข้อมูลยกเว้นนายจ้างประเภทขายประกัน/ขายตรง" },
-  { id: "4", label: "ยินยอมเปิดเผยข้อมูลยกเว้นนายจ้างประเภทจ้างเหมาแรงงาน และประเภทขายประกัน/ขายตรง" }
+  { id: "0", label: "ไม่ยินยอมเปิดเผยข้อมูล", label_en: "Do not consent to disclose data" },
+  { id: "1", label: "ยินยอมเปิดเผยข้อมูลต่อนายจ้างทุกประเภท", label_en: "Consent to disclose to all types of employers" },
+  { id: "2", label: "ยินยอมเปิดเผยข้อมูลยกเว้นนายจ้างประเภทจ้างเหมาแรงงาน", label_en: "Consent to disclose except for labor contractors" },
+  { id: "3", label: "ยินยอมเปิดเผยข้อมูลยกเว้นนายจ้างประเภทขายประกัน/ขายตรง", label_en: "Consent to disclose except for insurance/direct sales" },
+  { id: "4", label: "ยินยอมเปิดเผยข้อมูลยกเว้นนายจ้างประเภทจ้างเหมาแรงงาน และประเภทขายประกัน/ขายตรง", label_en: "Consent to disclose except for labor contractors and insurance/direct sales" }
 ];
 
 export const EDU_LEVELS = [
-  { id: "35", label: "อนุปริญญา" },
-  { id: "40", label: "ปริญญาตรี" },
-  { id: "50", label: "ประกาศนียบัตรบัณฑิต" },
-  { id: "60", label: "ปริญญาโท" },
-  { id: "70", label: "ประกาศนียบัตรบัณฑิตชั้นสูง" },
-  { id: "80", label: "ปริญญาเอก" },
-  { id: "90", label: "ประกาศนียบัตรหรือหลักสูตรเฉพาะ" }
+  { id: "35", label: "อนุปริญญา", label_en: "Associate Degree" },
+  { id: "40", label: "ปริญญาตรี", label_en: "Bachelor's Degree" },
+  { id: "50", label: "ประกาศนียบัตรบัณฑิต", label_en: "Graduate Certificate" },
+  { id: "60", label: "ปริญญาโท", label_en: "Master's Degree" },
+  { id: "70", label: "ประกาศนียบัตรบัณฑิตชั้นสูง", label_en: "Higher Graduate Diploma" },
+  { id: "80", label: "ปริญญาเอก", label_en: "Doctoral Degree" },
+  { id: "90", label: "ประกาศนียบัตรหรือหลักสูตรเฉพาะ", label_en: "Special Certificate or Course" }
 ];
 
 export const STUDY_REASONS = [
-  { id: "1", label: "เป็นความต้องการของบิดา/มารดา หรือผู้ปกครอง" },
-  { id: "2", label: "งานที่ต้องการต้องใช้วุฒิสูงกว่า ปริญญาตรี" },
-  { id: "3", label: "ได้รับทุนศึกษาต่อ" },
-  { id: "4", label: "เป็นความต้องการของตนเอง" },
-  { id: "0", label: "อื่นๆ (ระบุเพิ่มเติม)" }
+  { id: "1", label: "เป็นความต้องการของบิดา/มารดา หรือผู้ปกครอง", label_en: "Parents' or guardians' wish" },
+  { id: "2", label: "งานที่ต้องการต้องใช้วุฒิสูงกว่า ปริญญาตรี", label_en: "Desired job requires higher qualification" },
+  { id: "3", label: "ได้รับทุนศึกษาต่อ", label_en: "Received a scholarship" },
+  { id: "4", label: "เป็นความต้องการของตนเอง", label_en: "Personal desire" },
+  { id: "0", label: "อื่นๆ (ระบุเพิ่มเติม)", label_en: "Others (Please specify)" }
 ];
 
 export const STUDY_PROBLEMS = [
-  { id: "01", label: "ไม่มีปัญหา" },
-  { id: "02", label: "ข้อมูลสถานที่ศึกษาต่อไม่เพียงพอ" },
-  { id: "03", label: "คุณสมบัติในการสมัครเรียน" },
-  { id: "04", label: "ขาดความรู้พื้นฐานในการศึกษาต่อ" },
-  { id: "05", label: "ขาดแคลนเงินทุน" },
-  { id: "00", label: "อื่นๆ (ระบุเพิ่มเติม)" }
+  { id: "01", label: "ไม่มีปัญหา", label_en: "No problems" },
+  { id: "02", label: "ข้อมูลสถานที่ศึกษาต่อไม่เพียงพอ", label_en: "Insufficient information about institutions" },
+  { id: "03", label: "คุณสมบัติในการสมัครเรียน", label_en: "Application qualifications" },
+  { id: "04", label: "ขาดความรู้พื้นฐานในการศึกษาต่อ", label_en: "Lack of basic knowledge for further study" },
+  { id: "05", label: "ขาดแคลนเงินทุน", label_en: "Lack of funds" },
+  { id: "00", label: "อื่นๆ (ระบุเพิ่มเติม)", label_en: "Others (Please specify)" }
+];
+
+export const STUDY_INST_TYPES = [
+  { id: "1", label: "รัฐบาล", label_en: "Government" },
+  { id: "2", label: "เอกชน", label_en: "Private" },
+  { id: "3", label: "ต่างประเทศ", label_en: "International" }
 ];
 
 export const COUNTRIES = [
@@ -391,7 +401,6 @@ export const COUNTRIES = [
   { id: "TD", label: "CHAD" },
   { id: "TF", label: "FRENCH SOUTHERN TERRITORIES" },
   { id: "TG", label: "TOGO" },
-  { id: "TH", label: "THAILAND" },
   { id: "TJ", label: "TAJIKISTAN" },
   { id: "TK", label: "TOKELAU" },
   { id: "TL", label: "TIMOR-LESTE" },

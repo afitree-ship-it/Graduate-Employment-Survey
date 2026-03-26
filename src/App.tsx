@@ -82,7 +82,9 @@ const SearchableSelect = ({
   onChange, 
   placeholder,
   required = true,
-  lang
+  lang,
+  id,
+  name
 }: { 
   label: string; 
   options: { id: string; label: string; label_en?: string }[]; 
@@ -91,6 +93,8 @@ const SearchableSelect = ({
   placeholder?: string;
   required?: boolean;
   lang: Language;
+  id?: string;
+  name?: string;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -109,7 +113,7 @@ const SearchableSelect = ({
   const selectedOption = useMemo(() => options.find(opt => opt.id === value), [options, value]);
 
   return (
-    <div className={`relative mb-10 group ${isOpen ? 'z-[100]' : 'z-0'}`}>
+    <div className={`relative mb-10 group ${isOpen ? 'z-[100]' : 'z-0'}`} id={id} name={name}>
       <label className="block text-base font-bold text-slate-700 tracking-tighter mb-4 px-1">
         {label} {required && <span className="text-rose-500">*</span>}
       </label>
@@ -359,8 +363,62 @@ export default function App() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.student_id) {
-      setMessage({ type: "error", text: t.fill_id });
+    
+    // --- Validation ---
+    const isEmployed = ["1", "2", "5", "6", "7"].includes(formData.employment_status);
+    const isUnemployed = ["3", "4"].includes(formData.employment_status);
+
+    const requiredFields: (keyof GraduateData)[] = ["student_id", "faculty", "department", "gender", "employment_status"];
+    
+    if (isEmployed) {
+      requiredFields.push("job_type", "special_skill", "job_position_code", "organization_name", "business_type", "org_address_no", "org_subdistrict", "org_country", "org_zipcode", "avg_income", "job_satisfaction", "job_search_duration", "job_match", "knowledge_application");
+      if (formData.job_type === "00") requiredFields.push("job_type_other");
+      if (formData.special_skill === "00") requiredFields.push("special_skill_other");
+      if (formData.job_satisfaction === "00") requiredFields.push("job_satisfaction_other");
+    }
+    
+    if (isUnemployed) {
+      requiredFields.push("unemployed_reason", "job_search_problems", "work_location_pref", "work_position_pref", "skill_development_needs", "data_disclosure_consent");
+      if (formData.unemployed_reason === "0") requiredFields.push("unemployed_reason_other");
+      if (JSON.parse(formData.job_search_problems || "[]").includes("00")) requiredFields.push("job_search_problems_other");
+      if (formData.work_location_pref === "02") requiredFields.push("work_country_pref");
+    }
+    
+    requiredFields.push("further_study_intent");
+    if (formData.further_study_intent === "1") {
+      requiredFields.push("further_study_level", "further_study_is_same_field", "further_study_field", "further_study_inst_type", "further_study_reason", "further_study_problem");
+      if (formData.further_study_reason === "0") requiredFields.push("further_study_reason_other");
+      if (formData.further_study_problem === "00") requiredFields.push("further_study_problem_other");
+    }
+
+    const missingFields = requiredFields.filter(field => {
+      const val = formData[field];
+      if (field === "job_search_problems") {
+        return !val || JSON.parse(val).length === 0;
+      }
+      return !val || val.toString().trim() === "";
+    });
+
+    // Special check for skills checkboxes (at least one must be checked)
+    const skillFields = ["need_english", "need_computer", "need_accounting", "need_internet", "need_practice", "need_research", "need_other", "need_chinese", "need_asean"];
+    const hasAnySkill = skillFields.some(field => formData[field as keyof GraduateData] === "1");
+    if (!hasAnySkill) {
+      missingFields.push("skills_needed_title" as any);
+    }
+    
+    // Check for need_other_detail if need_other is checked
+    if (formData.need_other === "1" && !formData.need_other_detail) {
+      missingFields.push("need_other_detail");
+    }
+
+    if (missingFields.length > 0) {
+      console.warn("Validation failed for fields:", missingFields);
+      setMessage({ type: "error", text: t.fill_required });
+      
+      // Scroll to the first missing field if possible
+      const firstMissing = document.querySelector(`[name="${missingFields[0]}"], [id="${missingFields[0]}"]`);
+      if (firstMissing) firstMissing.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
       return;
     }
 
@@ -378,14 +436,15 @@ export default function App() {
 
     setLoading(true);
     
+    // 1. Save to localStorage immediately as a backup
+    localStorage.setItem('pending_survey_data', JSON.stringify(payload));
+    
     // Check if we are on Netlify or if API is likely to fail
     const isNetlify = window.location.hostname.includes('netlify.app');
     
     const tryDirectGoogleSheets = async (data: any) => {
-      console.log("Attempting direct save to Google Sheets...", data);
+      console.log("Attempting direct save to Google Sheets (background)...", data);
       try {
-        // We use no-cors because Google Apps Script doesn't always handle CORS preflight well
-        // but it will still receive the data.
         await fetch(GOOGLE_SHEET_URL, {
           method: 'POST',
           mode: 'no-cors',
@@ -393,6 +452,7 @@ export default function App() {
           body: JSON.stringify(data)
         });
         console.log("Direct save to Google Sheets initiated (no-cors mode)");
+        localStorage.removeItem('pending_survey_data'); // Cleanup if successful
         return true;
       } catch (err) {
         console.error("Direct save to Google Sheets failed:", err);
@@ -400,21 +460,20 @@ export default function App() {
       }
     };
 
-    try {
-      if (isNetlify) {
-        console.log("Detected Netlify environment, using direct Google Sheets save...");
-        await tryDirectGoogleSheets(payload);
-        // On Netlify, we assume success if we initiated the direct save
-        setShowSuccessModal(true);
-        setMessage(null);
-        localStorage.removeItem('pending_survey_data');
-        return;
-      }
+    // OPTIMISTIC UI: Show success immediately if we are on Netlify or have saved to localStorage
+    if (isNetlify) {
+      console.log("Detected Netlify environment, triggering background save...");
+      tryDirectGoogleSheets(payload); // Don't await
+      setShowSuccessModal(true);
+      setMessage(null);
+      setLoading(false);
+      return;
+    }
 
+    try {
       console.log("Attempting to save data to /api/save...", payload);
-      const response = await axios.post("/api/save", payload, { timeout: 15000 });
+      const response = await axios.post("/api/save", payload, { timeout: 10000 });
       const result = response.data;
-      console.log("Save response:", result);
       
       if (result.success) {
         setShowSuccessModal(true);
@@ -424,17 +483,12 @@ export default function App() {
         throw new Error(result.error || "Server returned failure");
       }
     } catch (error: any) {
-      console.error("Primary Save Failed, attempting backup save...", error);
+      console.error("Primary Save Failed, attempting background backup...", error);
       
-      // If API failed (especially 404), try direct Google Sheets as last resort
-      const directSuccess = await tryDirectGoogleSheets(payload);
+      // If API failed (especially 404), try direct Google Sheets in background
+      tryDirectGoogleSheets(payload); // Don't await
       
-      if (directSuccess || error.response?.status === 404 || error.code === 'ECONNABORTED') {
-        localStorage.setItem('pending_survey_data', JSON.stringify(payload));
-        setMessage({ 
-          type: "warning", 
-          text: "ระบบตรวจพบว่าเซิร์ฟเวอร์หลักไม่พร้อมใช้งาน (404) แต่เราได้ส่งข้อมูลสำรองไปที่ Google Sheets และเก็บไว้ในเครื่องของคุณแล้ว" 
-        });
+      if (error.response?.status === 404 || error.code === 'ECONNABORTED') {
         setShowSuccessModal(true);
         setMessage(null);
       } else {
@@ -564,6 +618,7 @@ export default function App() {
               <label className="block text-base font-bold text-slate-700 tracking-tighter mb-4 px-1">{t.student_id} <span className="text-rose-500">*</span></label>
               <input 
                 type="text" 
+                name="student_id"
                 required
                 placeholder={t.student_id_placeholder}
                 className="w-full p-5 bg-white border border-slate-200 rounded-3xl focus:ring-8 focus:ring-slate-100 focus:border-slate-900 transition-all outline-none font-bold text-lg tracking-tighter shadow-sm placeholder:text-slate-300"
@@ -581,6 +636,7 @@ export default function App() {
               }}
               required
               lang={lang}
+              id="faculty"
             />
             <SearchableSelect 
               label={t.department} 
@@ -589,8 +645,9 @@ export default function App() {
               onChange={(val) => handleInputChange("department", val)}
               required
               lang={lang}
+              id="department"
             />
-            <div className="mb-6 md:mb-10">
+            <div className="mb-6 md:mb-10" id="gender">
               <label className="block text-base font-bold text-slate-700 tracking-tighter mb-3 md:mb-4 px-1">{t.gender} <span className="text-rose-500">*</span></label>
               <div className="flex gap-3 md:gap-4 p-1.5 md:p-2 bg-slate-100 rounded-2xl md:rounded-[2rem] w-fit">
                 {[ {id: "ชาย", label: t.male}, {id: "หญิง", label: t.female} ].map(opt => (
@@ -613,6 +670,7 @@ export default function App() {
               onChange={(val) => handleInputChange("employment_status", val)}
               required
               lang={lang}
+              id="employment_status"
             />
             {formData.gender === "ชาย" && (
               <SearchableSelect 
@@ -636,12 +694,14 @@ export default function App() {
                         onChange={(val) => handleInputChange("job_type", val)}
                         required
                         lang={lang}
+                        id="job_type"
                       />
                       {formData.job_type === "00" && (
                         <div className="mb-6 md:mb-10">
                           <label className="block text-base font-bold text-slate-700 tracking-tighter mb-3 md:mb-4 px-1">{t.job_type_other} <span className="text-rose-500">*</span></label>
                           <input 
                             type="text" 
+                            name="job_type_other"
                             required
                             className="w-full p-4 md:p-5 bg-white border border-slate-200 rounded-2xl md:rounded-3xl focus:ring-8 focus:ring-slate-100 focus:border-slate-900 transition-all outline-none font-bold text-lg tracking-tighter shadow-sm placeholder:text-slate-300"
                             value={formData.job_type_other}
@@ -657,12 +717,14 @@ export default function App() {
                         onChange={(val) => handleInputChange("special_skill", val)}
                         required
                         lang={lang}
+                        id="special_skill"
                       />
                       {formData.special_skill === "00" && (
                         <div className="mb-6 md:mb-10">
                           <label className="block text-base font-bold text-slate-700 tracking-tighter mb-3 md:mb-4 px-1">{t.special_skill_other} <span className="text-rose-500">*</span></label>
                           <input 
                             type="text" 
+                            name="special_skill_other"
                             required
                             className="w-full p-4 md:p-5 bg-white border border-slate-200 rounded-2xl md:rounded-3xl focus:ring-8 focus:ring-slate-100 focus:border-slate-900 transition-all outline-none font-bold text-lg tracking-tighter shadow-sm placeholder:text-slate-300"
                             value={formData.special_skill_other}
@@ -678,11 +740,13 @@ export default function App() {
                         onChange={(val) => handleInputChange("job_position_code", val)}
                         required
                         lang={lang}
+                        id="job_position_code"
                       />
                       <div className="mb-6 md:mb-10">
                         <label className="block text-base font-bold text-slate-700 tracking-tighter mb-3 md:mb-4 px-1">{t.organization_name} <span className="text-rose-500">*</span></label>
                         <input 
                           type="text" 
+                          name="organization_name"
                           required
                           className="w-full p-4 md:p-5 bg-white border border-slate-200 rounded-2xl md:rounded-3xl focus:ring-8 focus:ring-slate-100 focus:border-slate-900 transition-all outline-none font-bold text-lg tracking-tighter shadow-sm placeholder:text-slate-300"
                           value={formData.organization_name}
@@ -697,13 +761,14 @@ export default function App() {
                         onChange={(val) => handleInputChange("business_type", val)}
                         required
                         lang={lang}
+                        id="business_type"
                       />
                     </FormSection>
 
                     <FormSection title={t.org_address} icon={FileText}>
                       <div className="mb-6 md:mb-10">
                         <label className="block text-base font-bold text-slate-700 tracking-tighter mb-3 md:mb-4 px-1">{t.org_address_no} <span className="text-rose-500">*</span></label>
-                        <input type="text" required className="w-full p-4 md:p-5 bg-white border border-slate-200 rounded-2xl md:rounded-3xl focus:ring-8 focus:ring-slate-100 focus:border-slate-900 transition-all outline-none font-bold text-lg tracking-tighter shadow-sm placeholder:text-slate-300" value={formData.org_address_no} onChange={(e) => handleInputChange("org_address_no", e.target.value)} placeholder={t.org_address_no_placeholder} />
+                        <input type="text" name="org_address_no" required className="w-full p-4 md:p-5 bg-white border border-slate-200 rounded-2xl md:rounded-3xl focus:ring-8 focus:ring-slate-100 focus:border-slate-900 transition-all outline-none font-bold text-lg tracking-tighter shadow-sm placeholder:text-slate-300" value={formData.org_address_no} onChange={(e) => handleInputChange("org_address_no", e.target.value)} placeholder={t.org_address_no_placeholder} />
                       </div>
                       <div className="mb-6 md:mb-10">
                         <label className="block text-base font-bold text-slate-700 tracking-tighter mb-3 md:mb-4 px-1">{t.org_moo}</label>
@@ -723,12 +788,12 @@ export default function App() {
                       </div>
                       <div className="mb-6 md:mb-10">
                         <label className="block text-base font-bold text-slate-700 tracking-tighter mb-3 md:mb-4 px-1">{t.org_subdistrict} <span className="text-rose-500">*</span></label>
-                        <input type="text" required className="w-full p-4 md:p-5 bg-white border border-slate-200 rounded-2xl md:rounded-3xl focus:ring-8 focus:ring-slate-100 focus:border-slate-900 transition-all outline-none font-bold text-lg tracking-tighter shadow-sm placeholder:text-slate-300" value={formData.org_subdistrict} onChange={(e) => handleInputChange("org_subdistrict", e.target.value)} placeholder={t.org_subdistrict_placeholder} />
+                        <input type="text" name="org_subdistrict" required className="w-full p-4 md:p-5 bg-white border border-slate-200 rounded-2xl md:rounded-3xl focus:ring-8 focus:ring-slate-100 focus:border-slate-900 transition-all outline-none font-bold text-lg tracking-tighter shadow-sm placeholder:text-slate-300" value={formData.org_subdistrict} onChange={(e) => handleInputChange("org_subdistrict", e.target.value)} placeholder={t.org_subdistrict_placeholder} />
                       </div>
-                      <SearchableSelect label={t.org_country} options={COUNTRIES} value={formData.org_country} onChange={(val) => handleInputChange("org_country", val)} required lang={lang} />
+                      <SearchableSelect label={t.org_country} options={COUNTRIES} value={formData.org_country} onChange={(val) => handleInputChange("org_country", val)} required lang={lang} id="org_country" />
                       <div className="mb-6 md:mb-10">
                         <label className="block text-base font-bold text-slate-700 tracking-tighter mb-3 md:mb-4 px-1">{t.org_zipcode} <span className="text-rose-500">*</span></label>
-                        <input type="text" required className="w-full p-4 md:p-5 bg-white border border-slate-200 rounded-2xl md:rounded-3xl focus:ring-8 focus:ring-slate-100 focus:border-slate-900 transition-all outline-none font-bold text-lg tracking-tighter shadow-sm placeholder:text-slate-300" value={formData.org_zipcode} onChange={(e) => handleInputChange("org_zipcode", e.target.value)} placeholder={t.org_zipcode_placeholder} />
+                        <input type="text" name="org_zipcode" required className="w-full p-4 md:p-5 bg-white border border-slate-200 rounded-2xl md:rounded-3xl focus:ring-8 focus:ring-slate-100 focus:border-slate-900 transition-all outline-none font-bold text-lg tracking-tighter shadow-sm placeholder:text-slate-300" value={formData.org_zipcode} onChange={(e) => handleInputChange("org_zipcode", e.target.value)} placeholder={t.org_zipcode_placeholder} />
                       </div>
                       <div className="mb-6 md:mb-10">
                         <label className="block text-base font-bold text-slate-700 tracking-tighter mb-3 md:mb-4 px-1">{t.org_phone}</label>
@@ -749,6 +814,7 @@ export default function App() {
                         <label className="block text-base font-bold text-slate-700 tracking-tighter mb-3 md:mb-4 px-1">{t.avg_income} <span className="text-rose-500">*</span></label>
                         <input 
                           type="number" 
+                          name="avg_income"
                           required
                           className="w-full p-4 md:p-5 bg-white border border-slate-200 rounded-2xl md:rounded-3xl focus:ring-8 focus:ring-slate-100 focus:border-slate-900 transition-all outline-none font-bold text-lg tracking-tighter shadow-sm placeholder:text-slate-300"
                           value={formData.avg_income}
@@ -763,12 +829,15 @@ export default function App() {
                         onChange={(val) => handleInputChange("job_satisfaction", val)}
                         required
                         lang={lang}
+                        id="job_satisfaction"
+                        name="job_satisfaction"
                       />
                       {formData.job_satisfaction === "00" && (
                         <div className="mb-6 md:mb-10">
                           <label className="block text-base font-bold text-slate-700 tracking-tighter mb-3 md:mb-4 px-1">{t.job_satisfaction_other} <span className="text-rose-500">*</span></label>
                           <input 
                             type="text" 
+                            name="job_satisfaction_other"
                             required
                             className="w-full p-4 md:p-5 bg-white border border-slate-200 rounded-2xl md:rounded-3xl focus:ring-8 focus:ring-slate-100 focus:border-slate-900 transition-all outline-none font-bold text-lg tracking-tighter shadow-sm placeholder:text-slate-300"
                             value={formData.job_satisfaction_other}
@@ -784,14 +853,17 @@ export default function App() {
                         onChange={(val) => handleInputChange("job_search_duration", val)}
                         required
                         lang={lang}
+                        id="job_search_duration"
+                        name="job_search_duration"
                       />
-                      <div className="mb-6 md:mb-10">
+                      <div className="mb-6 md:mb-10" id="job_match">
                         <label className="block text-base font-bold text-slate-700 tracking-tighter mb-3 md:mb-4 px-1">{t.job_match} <span className="text-rose-500">*</span></label>
                         <div className="flex gap-3 md:gap-4 p-1.5 md:p-2 bg-slate-100 rounded-2xl md:rounded-[2rem] w-fit">
                           {[ {id:"1", l:t.match}, {id:"2", l:t.not_match} ].map(opt => (
                             <button
                               key={opt.id}
                               type="button"
+                              name="job_match"
                               required
                               onClick={() => handleInputChange("job_match", opt.id)}
                               className={`px-6 md:px-10 py-3 md:py-4 rounded-xl md:rounded-2xl text-base md:text-lg font-black transition-all duration-500 ${formData.job_match === opt.id ? 'bg-slate-900 text-white shadow-2xl shadow-slate-300 scale-105' : 'text-slate-400 hover:text-slate-600'}`}
@@ -810,6 +882,8 @@ export default function App() {
                           placeholder={t.select}
                           lang={lang}
                           required
+                          id="knowledge_application"
+                          name="knowledge_application"
                         />
                       </div>
                     </FormSection>
@@ -827,6 +901,7 @@ export default function App() {
                         onChange={(val) => handleInputChange("unemployed_reason", val)}
                         required
                         lang={lang}
+                        id="unemployed_reason"
                       />
                       {formData.unemployed_reason === "0" && (
                         <div className="mb-6 md:mb-10">
@@ -841,7 +916,7 @@ export default function App() {
                           />
                         </div>
                       )}
-                      <div className="col-span-full mb-6 md:mb-10">
+                      <div className="col-span-full mb-6 md:mb-10" id="job_search_problems">
                         <label className="block text-base font-bold text-slate-700 tracking-tighter mb-4 md:mb-6 px-1">{t.job_search_problems} <span className="text-rose-500">*</span></label>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {JOB_SEARCH_PROBLEMS.map(prob => (
@@ -880,13 +955,14 @@ export default function App() {
                           />
                         </div>
                       )}
-                      <div className="mb-6 md:mb-10">
+                      <div className="mb-6 md:mb-10" id="work_location_pref">
                         <label className="block text-base font-bold text-slate-700 tracking-tighter mb-3 md:mb-4 px-1">{t.work_location_pref} <span className="text-rose-500">*</span></label>
                         <div className="flex gap-3 md:gap-4 p-1.5 md:p-2 bg-slate-100 rounded-2xl md:rounded-[2rem] w-fit">
                           {[ {id:"01", l:t.work_domestic}, {id:"02", l:t.work_abroad} ].map(opt => (
                             <button
                               key={opt.id}
                               type="button"
+                              name="work_location_pref"
                               required
                               onClick={() => handleInputChange("work_location_pref", opt.id)}
                               className={`px-6 md:px-10 py-3 md:py-4 rounded-xl md:rounded-2xl text-base md:text-lg font-black transition-all duration-500 ${formData.work_location_pref === opt.id ? 'bg-slate-900 text-white shadow-2xl shadow-slate-300 scale-105' : 'text-slate-400 hover:text-slate-600'}`}
@@ -897,12 +973,13 @@ export default function App() {
                         </div>
                       </div>
                       {formData.work_location_pref === "02" && (
-                        <SearchableSelect label={t.work_country_pref} options={COUNTRIES} value={formData.work_country_pref} onChange={(val) => handleInputChange("work_country_pref", val)} required lang={lang} />
+                        <SearchableSelect label={t.work_country_pref} options={COUNTRIES} value={formData.work_country_pref} onChange={(val) => handleInputChange("work_country_pref", val)} required lang={lang} id="work_country_pref" name="work_country_pref" />
                       )}
                       <div className="mb-6 md:mb-10">
                         <label className="block text-base font-bold text-slate-700 tracking-tighter mb-3 md:mb-4 px-1">{t.work_position_pref} <span className="text-rose-500">*</span></label>
                         <input 
                           type="text" 
+                          name="work_position_pref"
                           required
                           className="w-full p-4 md:p-5 bg-white border border-slate-200 rounded-2xl md:rounded-3xl focus:ring-8 focus:ring-slate-100 focus:border-slate-900 transition-all outline-none font-bold text-lg tracking-tighter shadow-sm placeholder:text-slate-300"
                           value={formData.work_position_pref}
@@ -914,6 +991,7 @@ export default function App() {
                         <label className="block text-base font-bold text-slate-700 tracking-tighter mb-3 md:mb-4 px-1">{t.skill_development_needs} <span className="text-rose-500">*</span></label>
                         <input 
                           type="text" 
+                          name="skill_development_needs"
                           required
                           className="w-full p-4 md:p-5 bg-white border border-slate-200 rounded-2xl md:rounded-3xl focus:ring-8 focus:ring-slate-100 focus:border-slate-900 transition-all outline-none font-bold text-lg tracking-tighter shadow-sm placeholder:text-slate-300"
                           value={formData.skill_development_needs}
@@ -922,7 +1000,7 @@ export default function App() {
                         />
                       </div>
                       <div className="col-span-full">
-                        <SearchableSelect label={t.data_disclosure_consent} options={DATA_DISCLOSURE} value={formData.data_disclosure_consent} onChange={(val) => handleInputChange("data_disclosure_consent", val)} required lang={lang} />
+                        <SearchableSelect label={t.data_disclosure_consent} options={DATA_DISCLOSURE} value={formData.data_disclosure_consent} onChange={(val) => handleInputChange("data_disclosure_consent", val)} required lang={lang} id="data_disclosure_consent" name="data_disclosure_consent" />
                       </div>
                     </FormSection>
                   </motion.div>
@@ -930,13 +1008,14 @@ export default function App() {
 
                 {/* 5. ความต้องการศึกษาต่อ */}
                 <FormSection title={t.further_study_intent_title} icon={GraduationCap}>
-                  <div className="mb-6 md:mb-10">
+                  <div className="mb-6 md:mb-10" id="further_study_intent">
                     <label className="block text-base font-bold text-slate-700 tracking-tighter mb-3 md:mb-4 px-1">{t.further_study_intent} <span className="text-rose-500">*</span></label>
                     <div className="flex gap-3 md:gap-4 p-1.5 md:p-2 bg-slate-100 rounded-2xl md:rounded-[2rem] w-fit">
                       {[ {id:"1", l:t.yes}, {id:"2", l:t.no} ].map(opt => (
                         <button
                           key={opt.id}
                           type="button"
+                          name="further_study_intent"
                           required
                           onClick={() => handleInputChange("further_study_intent", opt.id)}
                           className={`px-6 md:px-10 py-3 md:py-4 rounded-xl md:rounded-2xl text-base md:text-lg font-black transition-all duration-500 ${formData.further_study_intent === opt.id ? 'bg-slate-900 text-white shadow-2xl shadow-slate-300 scale-105' : 'text-slate-400 hover:text-slate-600'}`}
@@ -948,14 +1027,15 @@ export default function App() {
                   </div>
                   {formData.further_study_intent === "1" && (
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="col-span-full grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 md:gap-y-6">
-                      <SearchableSelect label={t.further_study_level} options={EDU_LEVELS} value={formData.further_study_level} onChange={(val) => handleInputChange("further_study_level", val)} required lang={lang} />
-                      <div className="mb-6 md:mb-10">
+                      <SearchableSelect label={t.further_study_level} options={EDU_LEVELS} value={formData.further_study_level} onChange={(val) => handleInputChange("further_study_level", val)} required lang={lang} id="further_study_level" name="further_study_level" />
+                      <div className="mb-6 md:mb-10" id="further_study_is_same_field">
                         <label className="block text-base font-bold text-slate-700 tracking-tighter mb-3 md:mb-4 px-1">{t.further_study_is_same_field} <span className="text-rose-500">*</span></label>
                         <div className="flex gap-3 md:gap-4 p-1.5 md:p-2 bg-slate-100 rounded-2xl md:rounded-[2rem] w-fit">
                           {[ {id:"1", l:t.same_field}, {id:"2", l:t.new_field} ].map(opt => (
                             <button
                               key={opt.id}
                               type="button"
+                              name="further_study_is_same_field"
                               required
                               onClick={() => handleInputChange("further_study_is_same_field", opt.id)}
                               className={`px-6 md:px-10 py-3 md:py-4 rounded-xl md:rounded-2xl text-base md:text-lg font-black transition-all duration-500 ${formData.further_study_is_same_field === opt.id ? 'bg-slate-900 text-white shadow-2xl shadow-slate-300 scale-105' : 'text-slate-400 hover:text-slate-600'}`}
@@ -983,6 +1063,7 @@ export default function App() {
                         onChange={(val) => handleInputChange("further_study_inst_type", val)} 
                         required
                         lang={lang}
+                        id="further_study_inst_type"
                       />
                       <SearchableSelect 
                         label={t.further_study_reason} 
@@ -991,6 +1072,7 @@ export default function App() {
                         onChange={(val) => handleInputChange("further_study_reason", val)} 
                         required 
                         lang={lang}
+                        id="further_study_reason"
                       />
                       {formData.further_study_reason === "0" && (
                         <div className="mb-6 md:mb-10">
@@ -1012,6 +1094,7 @@ export default function App() {
                         onChange={(val) => handleInputChange("further_study_problem", val)} 
                         required 
                         lang={lang}
+                        id="further_study_problem"
                       />
                       {formData.further_study_problem === "00" && (
                         <div className="mb-6 md:mb-10">
@@ -1032,7 +1115,7 @@ export default function App() {
 
                 {/* 6. ความเห็นเพิ่มเติม */}
                 <FormSection title={t.skills_suggestions} icon={MessageSquare}>
-                  <div className="col-span-full mb-6 md:mb-10">
+                  <div className="col-span-full mb-6 md:mb-10" id="skills_needed_title">
                     <label className="block text-base font-bold text-slate-700 tracking-tighter mb-4 md:mb-6 px-1">{t.skills_needed_title} <span className="text-rose-500">*</span></label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       {[
@@ -1069,6 +1152,7 @@ export default function App() {
                       <label className="block text-base font-bold text-slate-700 tracking-tighter mb-3 md:mb-4 px-1">{t.skills_other_label} <span className="text-rose-500">*</span></label>
                       <input 
                         type="text" 
+                        name="need_other_detail"
                         required
                         className="w-full p-4 md:p-5 bg-white border border-slate-200 rounded-2xl md:rounded-3xl focus:ring-8 focus:ring-slate-100 focus:border-slate-900 transition-all outline-none font-bold text-lg tracking-tighter shadow-sm placeholder:text-slate-300"
                         value={formData.need_other_detail}

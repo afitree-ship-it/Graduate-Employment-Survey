@@ -166,6 +166,7 @@ export const translations = {
     department_label: "สาขาวิชา",
     waiting_internet: "กำลังรอการเชื่อมต่ออินเทอร์เน็ต...",
     offline_msg: "คุณกำลังออฟไลน์ ข้อมูลจะถูกบันทึกเมื่อเชื่อมต่ออินเทอร์เน็ตได้",
+    fill_required: "กรุณากรอกข้อมูลให้ครบถ้วนในช่องที่มีเครื่องหมาย *",
   },
   en: {
     title: "Employment Status Survey System",
@@ -331,5 +332,6 @@ export const translations = {
     department_label: "Department",
     waiting_internet: "Waiting for internet connection...",
     offline_msg: "You are offline. Data will be saved once connection is restored.",
+    fill_required: "Please fill in all required fields marked with *",
   }
 };

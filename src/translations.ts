@@ -164,6 +164,8 @@ export const translations = {
     success_instruction: "กรุณาแคปหน้าจอเพื่อเป็นหลักฐานและส่งรูปให้เจ้าหน้าที่หรือผู้เกี่ยวข้องทราบ",
     student_id_label: "รหัสประจำตัวนักศึกษา",
     department_label: "สาขาวิชา",
+    waiting_internet: "กำลังรอการเชื่อมต่ออินเทอร์เน็ต...",
+    offline_msg: "คุณกำลังออฟไลน์ ข้อมูลจะถูกบันทึกเมื่อเชื่อมต่ออินเทอร์เน็ตได้",
   },
   en: {
     title: "Employment Status Survey System",
@@ -327,5 +329,7 @@ export const translations = {
     success_instruction: "Please take a screenshot as evidence and send it to the staff or relevant person.",
     student_id_label: "Student ID",
     department_label: "Department",
+    waiting_internet: "Waiting for internet connection...",
+    offline_msg: "You are offline. Data will be saved once connection is restored.",
   }
 };

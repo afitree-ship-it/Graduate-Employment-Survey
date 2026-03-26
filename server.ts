@@ -148,34 +148,38 @@ async function startServer() {
         console.log(`Inserted new record for ${studentId}`);
       }
 
-      // Forward to Google Sheets if URL is provided
+      // Forward to Google Sheets if URL is provided (Background process)
       const googleSheetUrl = process.env.GOOGLE_SHEET_WEBAPP_URL;
       
       if (googleSheetUrl) {
-        try {
-          // Format job_search_problems for Google Sheets (remove brackets and quotes)
-          const sheetData = { ...filteredData };
-          if (sheetData.job_search_problems) {
-            try {
-              const problems = JSON.parse(sheetData.job_search_problems);
-              if (Array.isArray(problems)) {
-                sheetData.job_search_problems = problems.join(", ");
+        // Run in background, don't await
+        (async () => {
+          try {
+            // Format job_search_problems for Google Sheets (remove brackets and quotes)
+            const sheetData = { ...filteredData };
+            if (sheetData.job_search_problems) {
+              try {
+                const problems = JSON.parse(sheetData.job_search_problems);
+                if (Array.isArray(problems)) {
+                  sheetData.job_search_problems = problems.join(", ");
+                }
+              } catch (e) {
+                // Fallback: simple string replacement if not valid JSON
+                sheetData.job_search_problems = sheetData.job_search_problems.replace(/[\[\]"]/g, "");
               }
-            } catch (e) {
-              // Fallback: simple string replacement if not valid JSON
-              sheetData.job_search_problems = sheetData.job_search_problems.replace(/[\[\]"]/g, "");
             }
-          }
 
-          console.log("Forwarding to Google Sheets...");
-          const response = await axios.post(googleSheetUrl, sheetData, {
-            headers: { "Content-Type": "application/json" },
-            maxRedirects: 5
-          });
-          console.log("Google Sheets response status:", response.status);
-        } catch (err: any) {
-          console.error("Failed to forward to Google Sheets:", err.message);
-        }
+            console.log("Forwarding to Google Sheets in background...");
+            const response = await axios.post(googleSheetUrl, sheetData, {
+              headers: { "Content-Type": "application/json" },
+              timeout: 10000, // 10s timeout
+              maxRedirects: 5
+            });
+            console.log("Google Sheets response status:", response.status);
+          } catch (err: any) {
+            console.error("Failed to forward to Google Sheets (Background):", err.message);
+          }
+        })();
       }
 
       res.json({ success: true, message: existing ? "อัปเดตข้อมูลเรียบร้อยแล้ว" : "บันทึกข้อมูลเรียบร้อยแล้ว" });

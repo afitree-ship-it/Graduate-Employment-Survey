@@ -269,8 +269,23 @@ export default function App() {
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [formData, setFormData] = useState<GraduateData>(initialFormData);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [isWaitingForOnline, setIsWaitingForOnline] = useState(false);
 
   // --- Effects ---
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     if (message && message.type === "error") {
@@ -311,6 +326,20 @@ export default function App() {
       return;
     }
 
+    if (!navigator.onLine) {
+      setIsWaitingForOnline(true);
+      setMessage({ type: "error", text: t.offline_msg });
+      
+      const handleOnlineOnce = () => {
+        setIsWaitingForOnline(false);
+        window.removeEventListener('online', handleOnlineOnce);
+        handleSubmit(e); // Retry
+      };
+      
+      window.addEventListener('online', handleOnlineOnce);
+      return;
+    }
+
     setLoading(true);
     const now = new Date();
     const dateStr = `${now.getFullYear() + 543}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -346,6 +375,26 @@ export default function App() {
 
   return (
     <div className="min-h-screen font-sans selection:bg-slate-900 selection:text-white relative overflow-x-hidden">
+      {/* Offline Indicator */}
+      {isOffline && (
+        <div className="fixed top-0 left-0 w-full bg-red-600 text-white text-center py-1 text-xs z-[1000] animate-pulse">
+          {t.offline_msg}
+        </div>
+      )}
+
+      {/* Waiting for Online Modal */}
+      {isWaitingForOnline && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[2000] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl">
+            <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">{t.waiting_internet}</h3>
+            <p className="text-slate-500">{t.offline_msg}</p>
+          </div>
+        </div>
+      )}
+
       {/* Language Switcher */}
       <div className="fixed top-3 right-3 md:top-6 md:right-6 z-[200]">
         <div className="bg-white/80 backdrop-blur-md border border-slate-100 p-1 md:p-1.5 rounded-xl md:rounded-2xl shadow-xl flex gap-1">

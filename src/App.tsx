@@ -34,7 +34,8 @@ import {
   STUDY_REASONS, 
   STUDY_PROBLEMS, 
   STUDY_INST_TYPES,
-  COUNTRIES 
+  COUNTRIES,
+  KNOWLEDGE_APPLICATION
 } from "./constants";
 import { JOB_POSITION_CODES } from "./jobCodes";
 import { GraduateData } from "./types";
@@ -671,23 +672,15 @@ export default function App() {
                         </div>
                       </div>
                       <div className="mb-6 md:mb-10">
-                        <label className="block text-base font-bold text-slate-700 tracking-tighter mb-3 md:mb-4 px-1">{t.knowledge_application} <span className="text-rose-500">*</span></label>
-                        <div className="relative">
-                          <select 
-                            required
-                            className="w-full p-4 md:p-5 bg-white border border-slate-200 rounded-2xl md:rounded-3xl focus:ring-8 focus:ring-slate-100 focus:border-slate-900 transition-all outline-none font-bold text-lg tracking-tighter shadow-sm appearance-none"
-                            value={formData.knowledge_application}
-                            onChange={(e) => handleInputChange("knowledge_application", e.target.value)}
-                          >
-                            <option value="">{t.select}</option>
-                            <option value="01">{t.very_much}</option>
-                            <option value="02">{t.much}</option>
-                            <option value="03">{t.moderate}</option>
-                            <option value="04">{t.little}</option>
-                            <option value="05">{t.very_little}</option>
-                          </select>
-                          <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={24} />
-                        </div>
+                        <SearchableSelect
+                          label={t.knowledge_application}
+                          options={KNOWLEDGE_APPLICATION}
+                          value={formData.knowledge_application}
+                          onChange={(val) => handleInputChange("knowledge_application", val)}
+                          placeholder={t.select}
+                          lang={lang}
+                          required
+                        />
                       </div>
                     </FormSection>
                   </motion.div>
@@ -1027,20 +1020,32 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.9, y: 40 }} 
               animate={{ opacity: 1, scale: 1, y: 0 }} 
               exit={{ opacity: 0, scale: 0.9, y: 40 }}
-              className="relative w-full max-w-xl bg-white rounded-[4rem] shadow-[0_50px_100px_rgba(0,0,0,0.3)] overflow-hidden"
+              className="relative w-full max-w-md bg-white rounded-[2.5rem] shadow-[0_50px_100px_rgba(0,0,0,0.3)] overflow-hidden"
             >
-              <div className="p-16 text-center">
-                <div className="w-32 h-32 bg-gradient-to-br from-[#22c55e] via-[#3b82f6] to-[#800020] rounded-[2.5rem] flex items-center justify-center mx-auto mb-10 rotate-12 shadow-2xl shadow-slate-200">
-                  <Check size={64} className="text-white" />
+              <div className="p-8 md:p-12 text-center">
+                <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-[#22c55e] via-[#3b82f6] to-[#800020] rounded-2xl md:rounded-3xl flex items-center justify-center mx-auto mb-6 md:mb-8 rotate-12 shadow-xl shadow-slate-100">
+                  <Check size={40} className="text-white md:hidden" />
+                  <Check size={48} className="text-white hidden md:block" />
                 </div>
-                <h2 className="text-5xl font-black text-slate-900 mb-6 tracking-tighter font-display">{t.success_title}</h2>
-                <p className="text-slate-500 text-xl font-medium leading-relaxed mb-12 tracking-tighter">
-                  {t.success_msg_1} <br />
-                  {t.success_msg_2}
+                <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-8 tracking-tighter font-display">{t.success_title}</h2>
+                <div className="bg-slate-50 p-6 rounded-3xl mb-8 text-left border border-slate-100">
+                  <div className="mb-3">
+                    <span className="text-slate-400 text-sm font-bold block mb-1 uppercase tracking-widest">{t.student_id_label}</span>
+                    <span className="text-slate-900 text-xl font-black tracking-tighter">{formData.student_id}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 text-sm font-bold block mb-1 uppercase tracking-widest">{t.department_label}</span>
+                    <span className="text-slate-900 text-xl font-black tracking-tighter">
+                      {lang === 'en' ? (currentFaculty?.departments.find(d => d.th === formData.department)?.en || formData.department) : formData.department}
+                    </span>
+                  </div>
+                </div>
+                <p className="text-rose-600 text-base md:text-lg font-bold leading-relaxed mb-8 md:mb-10 tracking-tighter bg-rose-50 p-5 md:p-6 rounded-2xl md:rounded-3xl border-2 border-rose-100">
+                  {t.success_instruction}
                 </p>
                 <button 
                   onClick={() => setShowSuccessModal(false)}
-                  className="w-full py-8 bg-slate-900 text-white font-black text-2xl rounded-[2rem] shadow-2xl shadow-slate-200 hover:bg-black transition-all tracking-tighter"
+                  className="w-full py-5 md:py-6 bg-slate-900 text-white font-black text-xl rounded-2xl md:rounded-3xl shadow-xl shadow-slate-200 hover:bg-black transition-all tracking-tighter"
                 >
                   {t.ok}
                 </button>

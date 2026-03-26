@@ -161,6 +161,9 @@ export const translations = {
     error_save: "เกิดข้อผิดพลาดในการบันทึก",
     error_conn: "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์",
     fill_id: "กรุณากรอกรหัสนักศึกษา",
+    success_instruction: "กรุณาแคปหน้าจอเพื่อเป็นหลักฐานและส่งรูปให้เจ้าหน้าที่หรือผู้เกี่ยวข้องทราบ",
+    student_id_label: "รหัสประจำตัวนักศึกษา",
+    department_label: "สาขาวิชา",
   },
   en: {
     title: "Employment Status Survey System",
@@ -321,5 +324,8 @@ export const translations = {
     error_save: "An error occurred during saving.",
     error_conn: "Server connection error.",
     fill_id: "Please enter your Student ID.",
+    success_instruction: "Please take a screenshot as evidence and send it to the staff or relevant person.",
+    student_id_label: "Student ID",
+    department_label: "Department",
   }
 };

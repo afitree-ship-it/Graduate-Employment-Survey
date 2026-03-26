@@ -191,6 +191,14 @@ export const STUDY_INST_TYPES = [
   { id: "3", label: "ต่างประเทศ", label_en: "International" }
 ];
 
+export const KNOWLEDGE_APPLICATION = [
+  { id: "01", label: "มากที่สุด", label_en: "Very Much" },
+  { id: "02", label: "มาก", label_en: "Much" },
+  { id: "03", label: "ปานกลาง", label_en: "Moderate" },
+  { id: "04", label: "น้อย", label_en: "Little" },
+  { id: "05", label: "น้อยที่สุด", label_en: "Very Little" }
+];
+
 export const COUNTRIES = [
   { id: "TH", label: "THAILAND" },
   { id: "AD", label: "ANDORRA" },

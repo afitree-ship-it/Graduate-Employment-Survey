@@ -88,6 +88,17 @@ async function startServer() {
 
   app.use(express.json());
 
+  // Request logging
+  app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    next();
+  });
+
+  // Health check
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok", timestamp: new Date().toISOString() });
+  });
+
   // Session configuration for iframe context
   app.use(cookieSession({
     name: 'session',
@@ -246,7 +257,21 @@ async function startServer() {
       
       if (googleSheetUrl) {
         try {
-          const response = await axios.post(googleSheetUrl, filteredData, {
+          // Format job_search_problems for Google Sheets (remove brackets and quotes)
+          const sheetData = { ...filteredData };
+          if (sheetData.job_search_problems) {
+            try {
+              const problems = JSON.parse(sheetData.job_search_problems);
+              if (Array.isArray(problems)) {
+                sheetData.job_search_problems = problems.join(", ");
+              }
+            } catch (e) {
+              // Fallback: simple string replacement if not valid JSON
+              sheetData.job_search_problems = sheetData.job_search_problems.replace(/[\[\]"]/g, "");
+            }
+          }
+
+          const response = await axios.post(googleSheetUrl, sheetData, {
             headers: { "Content-Type": "application/json" },
             maxRedirects: 5
           });

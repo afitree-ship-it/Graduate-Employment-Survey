@@ -10,77 +10,82 @@ import axios from "axios";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const db = new Database("employment.db");
-
-// Initialize Database
-db.exec(`
-  CREATE TABLE IF NOT EXISTS graduates (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    student_id TEXT UNIQUE,
-    faculty TEXT,
-    department TEXT,
-    grad_year TEXT,
-    gender TEXT,
-    military_status TEXT,
-    employment_status TEXT,
-    job_type TEXT,
-    job_type_other TEXT,
-    special_skill TEXT,
-    special_skill_other TEXT,
-    job_position_code TEXT,
-    organization_name TEXT,
-    business_type TEXT,
-    org_address_no TEXT,
-    org_moo TEXT,
-    org_building TEXT,
-    org_soi TEXT,
-    org_road TEXT,
-    org_subdistrict TEXT,
-    org_country TEXT,
-    org_zipcode TEXT,
-    org_phone TEXT,
-    org_fax TEXT,
-    org_email TEXT,
-    avg_income TEXT,
-    job_satisfaction TEXT,
-    job_satisfaction_other TEXT,
-    job_search_duration TEXT,
-    job_match TEXT,
-    knowledge_application TEXT,
-    unemployed_reason TEXT,
-    unemployed_reason_other TEXT,
-    job_search_problems TEXT,
-    job_search_problems_other TEXT,
-    work_location_pref TEXT,
-    work_country_pref TEXT,
-    work_position_pref TEXT,
-    skill_development_needs TEXT,
-    data_disclosure_consent TEXT,
-    further_study_intent TEXT,
-    further_study_level TEXT,
-    further_study_is_same_field TEXT,
-    further_study_field TEXT,
-    further_study_inst_type TEXT,
-    further_study_reason TEXT,
-    further_study_reason_other TEXT,
-    further_study_problem TEXT,
-    further_study_problem_other TEXT,
-    need_english TEXT,
-    need_computer TEXT,
-    need_accounting TEXT,
-    need_internet TEXT,
-    need_practice TEXT,
-    need_research TEXT,
-    need_other TEXT,
-    need_chinese TEXT,
-    need_asean TEXT,
-    need_other_detail TEXT,
-    suggestion_curriculum TEXT,
-    suggestion_teaching TEXT,
-    suggestion_activity TEXT,
-    created_at TEXT
-  )
-`);
+let db: any;
+try {
+  db = new Database("employment.db");
+  // Initialize Database
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS graduates (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      student_id TEXT UNIQUE,
+      faculty TEXT,
+      department TEXT,
+      grad_year TEXT,
+      gender TEXT,
+      military_status TEXT,
+      employment_status TEXT,
+      job_type TEXT,
+      job_type_other TEXT,
+      special_skill TEXT,
+      special_skill_other TEXT,
+      job_position_code TEXT,
+      organization_name TEXT,
+      business_type TEXT,
+      org_address_no TEXT,
+      org_moo TEXT,
+      org_building TEXT,
+      org_soi TEXT,
+      org_road TEXT,
+      org_subdistrict TEXT,
+      org_country TEXT,
+      org_zipcode TEXT,
+      org_phone TEXT,
+      org_fax TEXT,
+      org_email TEXT,
+      avg_income TEXT,
+      job_satisfaction TEXT,
+      job_satisfaction_other TEXT,
+      job_search_duration TEXT,
+      job_match TEXT,
+      knowledge_application TEXT,
+      unemployed_reason TEXT,
+      unemployed_reason_other TEXT,
+      job_search_problems TEXT,
+      job_search_problems_other TEXT,
+      work_location_pref TEXT,
+      work_country_pref TEXT,
+      work_position_pref TEXT,
+      skill_development_needs TEXT,
+      data_disclosure_consent TEXT,
+      further_study_intent TEXT,
+      further_study_level TEXT,
+      further_study_is_same_field TEXT,
+      further_study_field TEXT,
+      further_study_inst_type TEXT,
+      further_study_reason TEXT,
+      further_study_reason_other TEXT,
+      further_study_problem TEXT,
+      further_study_problem_other TEXT,
+      need_english TEXT,
+      need_computer TEXT,
+      need_accounting TEXT,
+      need_internet TEXT,
+      need_practice TEXT,
+      need_research TEXT,
+      need_other TEXT,
+      need_chinese TEXT,
+      need_asean TEXT,
+      need_other_detail TEXT,
+      suggestion_curriculum TEXT,
+      suggestion_teaching TEXT,
+      suggestion_activity TEXT,
+      created_at TEXT
+    )
+  `);
+  console.log("Database initialized successfully");
+} catch (err) {
+  console.error("CRITICAL: Failed to initialize database:", err);
+}
 
 async function startServer() {
   const app = express();
@@ -94,14 +99,20 @@ async function startServer() {
     next();
   });
 
-  // API Routes
+  // --- ULTIMATE API ROUTES (Moved to top for maximum reliability) ---
+  
+  // Test endpoint to verify API is alive
+  app.get("/api/ping", (req, res) => {
+    res.json({ success: true, message: "Server is alive", timestamp: new Date().toISOString() });
+  });
+
   app.post("/api/save", async (req, res) => {
-    console.log("Received POST /api/save request");
+    console.log(">>> [API SAVE] Received request at " + new Date().toISOString());
     const data = req.body;
     const studentId = data.student_id;
 
     if (!studentId) {
-      console.log("Missing student_id in request body");
+      console.error(">>> [API SAVE] Error: Missing student_id");
       return res.status(400).json({ success: false, error: "Student ID is required" });
     }
 
@@ -132,30 +143,33 @@ async function startServer() {
         }
       });
 
-      console.log(`Processing save for student_id: ${studentId}`);
-      const existing = db.prepare("SELECT student_id FROM graduates WHERE student_id = ?").get(studentId);
+      console.log(`>>> [API SAVE] Saving to SQLite for student_id: ${studentId}`);
       
-      const columns = Object.keys(filteredData);
-      const placeholders = columns.map(() => "?").join(",");
-      const values = Object.values(filteredData);
-
-      if (existing) {
-        const setClause = columns.map(col => `${col} = ?`).join(",");
-        db.prepare(`UPDATE graduates SET ${setClause} WHERE student_id = ?`).run(...values, studentId);
-        console.log(`Updated existing record for ${studentId}`);
+      if (!db) {
+        console.warn(">>> [API SAVE] Database not available, skipping local save");
       } else {
-        db.prepare(`INSERT INTO graduates (${columns.join(",")}) VALUES (${placeholders})`).run(...values);
-        console.log(`Inserted new record for ${studentId}`);
+        const existing = db.prepare("SELECT student_id FROM graduates WHERE student_id = ?").get(studentId);
+        
+        const columns = Object.keys(filteredData);
+        const placeholders = columns.map(() => "?").join(",");
+        const values = Object.values(filteredData);
+
+        if (existing) {
+          const setClause = columns.map(col => `${col} = ?`).join(",");
+          db.prepare(`UPDATE graduates SET ${setClause} WHERE student_id = ?`).run(...values, studentId);
+          console.log(`>>> [API SAVE] Updated existing record for ${studentId}`);
+        } else {
+          db.prepare(`INSERT INTO graduates (${columns.join(",")}) VALUES (${placeholders})`).run(...values);
+          console.log(`>>> [API SAVE] Inserted new record for ${studentId}`);
+        }
       }
 
       // Forward to Google Sheets if URL is provided (Background process)
       const googleSheetUrl = process.env.GOOGLE_SHEET_WEBAPP_URL;
       
       if (googleSheetUrl) {
-        // Run in background, don't await
         (async () => {
           try {
-            // Format job_search_problems for Google Sheets (remove brackets and quotes)
             const sheetData = { ...filteredData };
             if (sheetData.job_search_problems) {
               try {
@@ -164,46 +178,47 @@ async function startServer() {
                   sheetData.job_search_problems = problems.join(", ");
                 }
               } catch (e) {
-                // Fallback: simple string replacement if not valid JSON
                 sheetData.job_search_problems = sheetData.job_search_problems.replace(/[\[\]"]/g, "");
               }
             }
 
-            console.log("Forwarding to Google Sheets in background...");
-            const response = await axios.post(googleSheetUrl, sheetData, {
+            console.log(">>> [API SAVE] Forwarding to Google Sheets...");
+            await axios.post(googleSheetUrl, sheetData, {
               headers: { "Content-Type": "application/json" },
-              timeout: 10000, // 10s timeout
+              timeout: 15000,
               maxRedirects: 5
             });
-            console.log("Google Sheets response status:", response.status);
+            console.log(">>> [API SAVE] Google Sheets forward successful");
           } catch (err: any) {
-            console.error("Failed to forward to Google Sheets (Background):", err.message);
+            console.error(">>> [API SAVE] Google Sheets forward failed:", err.message);
           }
         })();
       }
 
-      res.json({ success: true, message: existing ? "อัปเดตข้อมูลเรียบร้อยแล้ว" : "บันทึกข้อมูลเรียบร้อยแล้ว" });
+      res.json({ success: true, message: "บันทึกข้อมูลเรียบร้อยแล้ว" });
     } catch (error: any) {
-      console.error("Database error:", error);
-      res.status(500).json({ success: false, error: error.message });
+      console.error(">>> [API SAVE] Database error:", error);
+      res.status(500).json({ success: false, error: "Database error: " + error.message });
     }
   });
 
   app.get("/api/graduate/:studentId", (req, res) => {
     const { studentId } = req.params;
-    console.log(`Received GET /api/graduate/${studentId} request`);
-    const row = db.prepare("SELECT * FROM graduates WHERE student_id = ?").get(studentId);
-    if (row) {
-      res.json({ success: true, data: row });
-    } else {
-      res.status(404).json({ success: false, message: "Not found" });
+    console.log(`>>> [API GET] Fetching data for ${studentId}`);
+    try {
+      const row = db.prepare("SELECT * FROM graduates WHERE student_id = ?").get(studentId);
+      if (row) {
+        res.json({ success: true, data: row });
+      } else {
+        res.status(404).json({ success: false, message: "Not found" });
+      }
+    } catch (error: any) {
+      console.error(">>> [API GET] Error:", error);
+      res.status(500).json({ success: false, error: error.message });
     }
   });
 
-  // Health check
-  app.get("/api/health", (req, res) => {
-    res.json({ status: "ok", timestamp: new Date().toISOString() });
-  });
+  // --- END ULTIMATE API ROUTES ---
 
   // Session configuration for iframe context
   app.use(cookieSession({

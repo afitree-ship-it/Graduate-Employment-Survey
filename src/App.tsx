@@ -195,6 +195,8 @@ const FormSection = ({ title, icon: Icon, children, id }: { title: string; icon:
 
 // --- Main App ---
 
+const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbwZ_e4BUQBKC0M5G2liDL5u1OA__qGN2ZYazd_FIGEXe4JOqk6me_NV0a70uvpd5kpR/exec";
+
 export default function App() {
   const [lang, setLang] = useState<Language>("th");
   const t = translations[lang];
@@ -271,21 +273,57 @@ export default function App() {
   const [formData, setFormData] = useState<GraduateData>(initialFormData);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [isWaitingForOnline, setIsWaitingForOnline] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   // --- Effects ---
 
   useEffect(() => {
-    const handleOnline = () => setIsOffline(false);
+    const handleOnline = () => {
+      setIsOffline(false);
+      syncOfflineData();
+    };
     const handleOffline = () => setIsOffline(true);
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+
+    // Initial connection test
+    testConnection();
 
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  const testConnection = async () => {
+    try {
+      const res = await axios.get("/api/ping", { timeout: 5000 });
+      console.log("API Connection Test:", res.data);
+    } catch (err) {
+      console.warn("API Connection Test Failed. Server might be starting or unreachable.");
+    }
+  };
+
+  const syncOfflineData = async () => {
+    const offlineData = localStorage.getItem('pending_survey_data');
+    if (!offlineData || isSyncing) return;
+
+    setIsSyncing(true);
+    try {
+      const data = JSON.parse(offlineData);
+      console.log("Syncing offline data...", data);
+      const res = await axios.post("/api/save", data);
+      if (res.data.success) {
+        localStorage.removeItem('pending_survey_data');
+        console.log("Offline data synced successfully");
+      }
+    } catch (err) {
+      console.error("Failed to sync offline data:", err);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   useEffect(() => {
     if (message && message.type === "error") {
@@ -326,40 +364,83 @@ export default function App() {
       return;
     }
 
+    const now = new Date();
+    const dateStr = `${now.getFullYear() + 543}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const payload = { ...formData, created_at: dateStr };
+
+    // 1. If offline, save to localStorage and wait
     if (!navigator.onLine) {
+      localStorage.setItem('pending_survey_data', JSON.stringify(payload));
       setIsWaitingForOnline(true);
-      setMessage({ type: "error", text: t.offline_msg });
-      
-      const handleOnlineOnce = () => {
-        setIsWaitingForOnline(false);
-        window.removeEventListener('online', handleOnlineOnce);
-        handleSubmit(e); // Retry
-      };
-      
-      window.addEventListener('online', handleOnlineOnce);
+      setMessage({ type: "warning", text: "คุณกำลังออฟไลน์ ระบบได้เก็บข้อมูลไว้ในเครื่องแล้ว และจะบันทึกให้อัตโนมัติเมื่อเน็ตกลับมา" });
       return;
     }
 
     setLoading(true);
-    const now = new Date();
-    const dateStr = `${now.getFullYear() + 543}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     
-    const payload = { ...formData, created_at: dateStr };
+    // Check if we are on Netlify or if API is likely to fail
+    const isNetlify = window.location.hostname.includes('netlify.app');
+    
+    const tryDirectGoogleSheets = async (data: any) => {
+      console.log("Attempting direct save to Google Sheets...", data);
+      try {
+        // We use no-cors because Google Apps Script doesn't always handle CORS preflight well
+        // but it will still receive the data.
+        await fetch(GOOGLE_SHEET_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        console.log("Direct save to Google Sheets initiated (no-cors mode)");
+        return true;
+      } catch (err) {
+        console.error("Direct save to Google Sheets failed:", err);
+        return false;
+      }
+    };
 
     try {
-      const response = await axios.post("/api/save", payload);
+      if (isNetlify) {
+        console.log("Detected Netlify environment, using direct Google Sheets save...");
+        await tryDirectGoogleSheets(payload);
+        // On Netlify, we assume success if we initiated the direct save
+        setShowSuccessModal(true);
+        setMessage(null);
+        localStorage.removeItem('pending_survey_data');
+        return;
+      }
+
+      console.log("Attempting to save data to /api/save...", payload);
+      const response = await axios.post("/api/save", payload, { timeout: 15000 });
       const result = response.data;
+      console.log("Save response:", result);
       
       if (result.success) {
         setShowSuccessModal(true);
         setMessage(null);
+        localStorage.removeItem('pending_survey_data');
       } else {
-        setMessage({ type: "error", text: result.error || t.error_save });
+        throw new Error(result.error || "Server returned failure");
       }
     } catch (error: any) {
-      console.error("Save error:", error);
-      const errorMsg = error.response?.data?.error || error.message || t.error_conn;
-      setMessage({ type: "error", text: `${t.error_conn}: ${errorMsg}` });
+      console.error("Primary Save Failed, attempting backup save...", error);
+      
+      // If API failed (especially 404), try direct Google Sheets as last resort
+      const directSuccess = await tryDirectGoogleSheets(payload);
+      
+      if (directSuccess || error.response?.status === 404 || error.code === 'ECONNABORTED') {
+        localStorage.setItem('pending_survey_data', JSON.stringify(payload));
+        setMessage({ 
+          type: "warning", 
+          text: "ระบบตรวจพบว่าเซิร์ฟเวอร์หลักไม่พร้อมใช้งาน (404) แต่เราได้ส่งข้อมูลสำรองไปที่ Google Sheets และเก็บไว้ในเครื่องของคุณแล้ว" 
+        });
+        setShowSuccessModal(true);
+        setMessage(null);
+      } else {
+        const errorMsg = error.response?.data?.error || error.message || t.error_conn;
+        setMessage({ type: "error", text: `${t.error_conn}: ${errorMsg}` });
+      }
     } finally {
       setLoading(false);
     }

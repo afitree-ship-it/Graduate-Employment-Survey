@@ -94,6 +94,108 @@ async function startServer() {
     next();
   });
 
+  // API Routes
+  app.post("/api/save", async (req, res) => {
+    console.log("Received POST /api/save request");
+    const data = req.body;
+    const studentId = data.student_id;
+
+    if (!studentId) {
+      console.log("Missing student_id in request body");
+      return res.status(400).json({ success: false, error: "Student ID is required" });
+    }
+
+    try {
+      // Filter data to only include valid columns
+      const validColumns = [
+        "student_id", "faculty", "department", "gender", "military_status", 
+        "employment_status", "job_type", "job_type_other", "special_skill", "special_skill_other", 
+        "job_position_code", "organization_name", "business_type", "org_address_no", "org_moo", 
+        "org_building", "org_soi", "org_road", "org_subdistrict", "org_country", "org_zipcode", 
+        "org_phone", "org_fax", "org_email", "avg_income", "job_satisfaction", "job_satisfaction_other", 
+        "job_search_duration", "job_match", "knowledge_application", "unemployed_reason", 
+        "unemployed_reason_other", "job_search_problems", "job_search_problems_other", 
+        "work_location_pref", "work_country_pref", "work_position_pref", "skill_development_needs", 
+        "data_disclosure_consent", "further_study_intent", "further_study_level", 
+        "further_study_is_same_field", "further_study_field", "further_study_inst_type", 
+        "further_study_reason", "further_study_reason_other", "further_study_problem", 
+        "further_study_problem_other", "need_english", "need_computer", "need_accounting", 
+        "need_internet", "need_practice", "need_research", "need_other", "need_chinese", 
+        "need_asean", "need_other_detail", "suggestion_curriculum", "suggestion_teaching", 
+        "suggestion_activity", "created_at"
+      ];
+
+      const filteredData: any = {};
+      validColumns.forEach(col => {
+        if (data[col] !== undefined) {
+          filteredData[col] = data[col];
+        }
+      });
+
+      console.log(`Processing save for student_id: ${studentId}`);
+      const existing = db.prepare("SELECT student_id FROM graduates WHERE student_id = ?").get(studentId);
+      
+      const columns = Object.keys(filteredData);
+      const placeholders = columns.map(() => "?").join(",");
+      const values = Object.values(filteredData);
+
+      if (existing) {
+        const setClause = columns.map(col => `${col} = ?`).join(",");
+        db.prepare(`UPDATE graduates SET ${setClause} WHERE student_id = ?`).run(...values, studentId);
+        console.log(`Updated existing record for ${studentId}`);
+      } else {
+        db.prepare(`INSERT INTO graduates (${columns.join(",")}) VALUES (${placeholders})`).run(...values);
+        console.log(`Inserted new record for ${studentId}`);
+      }
+
+      // Forward to Google Sheets if URL is provided
+      const googleSheetUrl = process.env.GOOGLE_SHEET_WEBAPP_URL;
+      
+      if (googleSheetUrl) {
+        try {
+          // Format job_search_problems for Google Sheets (remove brackets and quotes)
+          const sheetData = { ...filteredData };
+          if (sheetData.job_search_problems) {
+            try {
+              const problems = JSON.parse(sheetData.job_search_problems);
+              if (Array.isArray(problems)) {
+                sheetData.job_search_problems = problems.join(", ");
+              }
+            } catch (e) {
+              // Fallback: simple string replacement if not valid JSON
+              sheetData.job_search_problems = sheetData.job_search_problems.replace(/[\[\]"]/g, "");
+            }
+          }
+
+          console.log("Forwarding to Google Sheets...");
+          const response = await axios.post(googleSheetUrl, sheetData, {
+            headers: { "Content-Type": "application/json" },
+            maxRedirects: 5
+          });
+          console.log("Google Sheets response status:", response.status);
+        } catch (err: any) {
+          console.error("Failed to forward to Google Sheets:", err.message);
+        }
+      }
+
+      res.json({ success: true, message: existing ? "อัปเดตข้อมูลเรียบร้อยแล้ว" : "บันทึกข้อมูลเรียบร้อยแล้ว" });
+    } catch (error: any) {
+      console.error("Database error:", error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  app.get("/api/graduate/:studentId", (req, res) => {
+    const { studentId } = req.params;
+    console.log(`Received GET /api/graduate/${studentId} request`);
+    const row = db.prepare("SELECT * FROM graduates WHERE student_id = ?").get(studentId);
+    if (row) {
+      res.json({ success: true, data: row });
+    } else {
+      res.status(404).json({ success: false, message: "Not found" });
+    }
+  });
+
   // Health check
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
@@ -200,103 +302,6 @@ async function startServer() {
       req.session.netlify_token = null;
     }
     res.json({ success: true });
-  });
-
-  // API Routes
-  app.post("/api/save", async (req, res) => {
-    const data = req.body;
-    const studentId = data.student_id;
-
-    if (!studentId) {
-      return res.status(400).json({ success: false, error: "Student ID is required" });
-    }
-
-    try {
-      // Filter data to only include valid columns
-      const validColumns = [
-        "student_id", "faculty", "department", "gender", "military_status", 
-        "employment_status", "job_type", "job_type_other", "special_skill", "special_skill_other", 
-        "job_position_code", "organization_name", "business_type", "org_address_no", "org_moo", 
-        "org_building", "org_soi", "org_road", "org_subdistrict", "org_country", "org_zipcode", 
-        "org_phone", "org_fax", "org_email", "avg_income", "job_satisfaction", "job_satisfaction_other", 
-        "job_search_duration", "job_match", "knowledge_application", "unemployed_reason", 
-        "unemployed_reason_other", "job_search_problems", "job_search_problems_other", 
-        "work_location_pref", "work_country_pref", "work_position_pref", "skill_development_needs", 
-        "data_disclosure_consent", "further_study_intent", "further_study_level", 
-        "further_study_is_same_field", "further_study_field", "further_study_inst_type", 
-        "further_study_reason", "further_study_reason_other", "further_study_problem", 
-        "further_study_problem_other", "need_english", "need_computer", "need_accounting", 
-        "need_internet", "need_practice", "need_research", "need_other", "need_chinese", 
-        "need_asean", "need_other_detail", "suggestion_curriculum", "suggestion_teaching", 
-        "suggestion_activity", "created_at"
-      ];
-
-      const filteredData: any = {};
-      validColumns.forEach(col => {
-        if (data[col] !== undefined) {
-          filteredData[col] = data[col];
-        }
-      });
-
-      const existing = db.prepare("SELECT student_id FROM graduates WHERE student_id = ?").get(studentId);
-      
-      const columns = Object.keys(filteredData);
-      const placeholders = columns.map(() => "?").join(",");
-      const values = Object.values(filteredData);
-
-      if (existing) {
-        const setClause = columns.map(col => `${col} = ?`).join(",");
-        db.prepare(`UPDATE graduates SET ${setClause} WHERE student_id = ?`).run(...values, studentId);
-      } else {
-        db.prepare(`INSERT INTO graduates (${columns.join(",")}) VALUES (${placeholders})`).run(...values);
-      }
-
-      // Forward to Google Sheets if URL is provided
-      const googleSheetUrl = process.env.GOOGLE_SHEET_WEBAPP_URL;
-      console.log("Attempting to forward to Google Sheets. URL exists:", !!googleSheetUrl);
-      
-      if (googleSheetUrl) {
-        try {
-          // Format job_search_problems for Google Sheets (remove brackets and quotes)
-          const sheetData = { ...filteredData };
-          if (sheetData.job_search_problems) {
-            try {
-              const problems = JSON.parse(sheetData.job_search_problems);
-              if (Array.isArray(problems)) {
-                sheetData.job_search_problems = problems.join(", ");
-              }
-            } catch (e) {
-              // Fallback: simple string replacement if not valid JSON
-              sheetData.job_search_problems = sheetData.job_search_problems.replace(/[\[\]"]/g, "");
-            }
-          }
-
-          const response = await axios.post(googleSheetUrl, sheetData, {
-            headers: { "Content-Type": "application/json" },
-            maxRedirects: 5
-          });
-          console.log("Google Sheets response status:", response.status);
-          console.log("Google Sheets response data:", response.data);
-        } catch (err: any) {
-          console.error("Failed to forward to Google Sheets:", err.message);
-        }
-      }
-
-      res.json({ success: true, message: existing ? "อัปเดตข้อมูลเรียบร้อยแล้ว" : "บันทึกข้อมูลเรียบร้อยแล้ว" });
-    } catch (error: any) {
-      console.error("Database error:", error);
-      res.status(500).json({ success: false, error: error.message });
-    }
-  });
-
-  app.get("/api/graduate/:studentId", (req, res) => {
-    const { studentId } = req.params;
-    const row = db.prepare("SELECT * FROM graduates WHERE student_id = ?").get(studentId);
-    if (row) {
-      res.json({ success: true, data: row });
-    } else {
-      res.status(404).json({ success: false, message: "Not found" });
-    }
   });
 
   // Vite middleware for development

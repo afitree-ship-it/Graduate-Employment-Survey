@@ -16,6 +16,7 @@ import {
   ChevronDown as ChevronDownIcon
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import axios from "axios";
 import { Language, translations } from "./translations";
 import { 
   FACULTIES, 
@@ -316,20 +317,19 @@ export default function App() {
     const payload = { ...formData, created_at: dateStr };
 
     try {
-      const res = await fetch("/api/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      const result = await res.json();
+      const response = await axios.post("/api/save", payload);
+      const result = response.data;
+      
       if (result.success) {
         setShowSuccessModal(true);
         setMessage(null);
       } else {
         setMessage({ type: "error", text: result.error || t.error_save });
       }
-    } catch (error) {
-      setMessage({ type: "error", text: t.error_conn });
+    } catch (error: any) {
+      console.error("Save error:", error);
+      const errorMsg = error.response?.data?.error || error.message || t.error_conn;
+      setMessage({ type: "error", text: `${t.error_conn}: ${errorMsg}` });
     } finally {
       setLoading(false);
     }

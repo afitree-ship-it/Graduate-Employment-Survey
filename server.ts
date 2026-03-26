@@ -246,17 +246,14 @@ async function startServer() {
       
       if (googleSheetUrl) {
         try {
-          const response = await fetch(googleSheetUrl, {
-            method: "POST",
+          const response = await axios.post(googleSheetUrl, filteredData, {
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(filteredData),
-            redirect: 'follow'
+            maxRedirects: 5
           });
-          const resultText = await response.text();
           console.log("Google Sheets response status:", response.status);
-          console.log("Google Sheets response body:", resultText);
-        } catch (err) {
-          console.error("Failed to forward to Google Sheets:", err);
+          console.log("Google Sheets response data:", response.data);
+        } catch (err: any) {
+          console.error("Failed to forward to Google Sheets:", err.message);
         }
       }
 
